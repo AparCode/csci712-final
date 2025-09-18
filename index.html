@@ -9,14 +9,16 @@
             margin: 0;
         }
         </style>
-        <!-- <script type="importmap">
-            {
-                "imports": {
-                    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-                    "jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-                }
-		    }
-	    </script> -->
+        <script id="vertexShader" type="vertex">
+            void main(){
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+	    </script>
+        <script id="fragmentShader" type="fragment">
+            void main(){
+                gl_FragColor = vec4(vec3(1.0, 1.0, 1.0), 1.0);
+            }
+	    </script>
     </head>
 
     <body>
