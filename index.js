@@ -201,16 +201,6 @@ function animate(time) {
     preTime = time;
 }
 
-function fractionate(val, minVal, maxVal) {
-    return (val - minVal)/(maxVal - minVal);
-}
-
-function modulate(val, minVal, maxVal, outMin, outMax) {
-    var fr = fractionate(val, minVal, maxVal);
-    var delta = outMax - outMin;
-    return outMin + (fr * delta);
-}
-
 function truncateAvg(dataer, i, k){
     if ((k - i) == 0) return dataer[i];
     var j = 0;
