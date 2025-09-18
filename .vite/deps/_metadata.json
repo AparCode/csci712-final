@@ -1,0 +1,43 @@
+{
+  "hash": "e87ba701",
+  "configHash": "03880261",
+  "lockfileHash": "281cc767",
+  "browserHash": "f7db5775",
+  "optimized": {
+    "@tweenjs/tween.js": {
+      "src": "../../node_modules/@tweenjs/tween.js/dist/tween.esm.js",
+      "file": "@tweenjs_tween__js.js",
+      "fileHash": "33d592ae",
+      "needsInterop": false
+    },
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "dd4574d2",
+      "needsInterop": false
+    },
+    "three/examples/jsm/Addons.js": {
+      "src": "../../node_modules/three/examples/jsm/Addons.js",
+      "file": "three_examples_jsm_Addons__js.js",
+      "fileHash": "88d0f357",
+      "needsInterop": false
+    },
+    "three/examples/jsm/renderers/CSS2DRenderer.js": {
+      "src": "../../node_modules/three/examples/jsm/renderers/CSS2DRenderer.js",
+      "file": "three_examples_jsm_renderers_CSS2DRenderer__js.js",
+      "fileHash": "f894de4f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-EFRUARHD": {
+      "file": "chunk-EFRUARHD.js"
+    },
+    "chunk-MCK4J7S4": {
+      "file": "chunk-MCK4J7S4.js"
+    },
+    "chunk-PZ5AY32C": {
+      "file": "chunk-PZ5AY32C.js"
+    }
+  }
+}
