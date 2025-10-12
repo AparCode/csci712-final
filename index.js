@@ -123,7 +123,7 @@ initalizeSound();
 // AUDIO
 function initalizeSound() {
     camera.add(listener);
-    audioLoader.load("../sounds/inorganicSpace.mp3", function (buffer) {
+    audioLoader.load("../sounds/UnprecedentedTraveler.mp3", function (buffer) {
         sound.setBuffer(buffer);
         sound.setLoop(false);
         sound.setVolume(1);
@@ -213,54 +213,57 @@ function animateMusicType2(object, thisKeyframes, alph, time, data, avg, preTime
     var yolo = ((avg / 255 * 2 * 2) ** 3) / 8;
 
     t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
-    console.log(dt / 1000, yolo * (dt / 1000));
+    // console.log(dt / 1000, yolo * (dt / 1000));
     t %= 1;
 
-    object.scale.x = 1 + bpmBoost(bass, avg, dt, 0.05, 1, 0.25);
+    object.rotation.x += rad(bpmBoost(bass, avg, dt, 0.05, 5, 0.25, 0.1));
 
     object.position.copy(catmullRomLoop(keyframesParse, t, alph));
 }
 
 let boostActivate = false;
-let avgPre = 0;
+let avgPreLen = 4;
+let avgPre = [];
 let boostTime = 0;
+let boostActivateTime = 0;
 let boostCumulative = 0;
 let boostInetrpolate = 0;
 let boostCurrent = 0;
-function bpmBoost(bass, avg, dt, hreshThold, boostAmount, boostLength){
+function bpmBoost(bass, avg, dt, hreshThold, boostAmount, boostLength, boostActivateLength){
     var tEX = 0;
     bass /= 255;
     avg /= 255;
     if (!analyser) return 0;
 
     // console.log(bass, avgPre + hreshThold);
-    if (bass > avgPre + hreshThold){
+    if ((bass > truncateAvg(avgPre, 0, Math.min(avgPre.length, avgPreLen)) + hreshThold) && !boostActivate){
         boostActivate = true;
         // boostCumulative += boostAmount;
         boostCumulative += boostAmount;
         boostCurrent = boostInetrpolate;
         boostTime = 0;
-        console.log("BOOST!", boostInetrpolate);
+        boostActivateTime = 0;
+        console.log("BOOST!", bass, truncateAvg(avgPre, 0, avgPreLen) + hreshThold);
         // console.log(bass, "BALLS");
     }
     if (boostActivate){
-        boostTime += dt / 1000;
-        if (boostTime > boostLength){  
-            boostTime = boostLength;
+        boostActivateTime += dt / 1000;
+        if (boostActivateTime > boostActivateLength){  
             boostActivate = false; 
         }
     }
+    boostTime += (dt / 1000) / boostLength;
+    if (boostTime > 1){  
+        boostTime = 1;
+    }
 
-    boostInetrpolate = lerp(boostCurrent, boostCumulative, boostTime / boostLength);
-
-    // boostCumulative -= dt / 1000;
-    // if (boostCumulative < 0.0){  
-    //     boostCumulative = 0;
-    // }
-    tEX = boostCumulative - boostInetrpolate;
-    avgPre = bass;
-
+    boostInetrpolate = lerp(boostCurrent, boostCumulative, boostTime);
     
+    tEX = boostCumulative - boostInetrpolate;
+    avgPre.push(bass);
+    if (avgPre.length > avgPreLen) avgPre.shift();
+    
+
     return tEX;
 }
 
