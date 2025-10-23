@@ -1,28 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CSCI 712 Music Visualizer</title>
-        <style>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSCI 712 Music Visualizer</title>
+    <style>
         body {
             margin: 0;
         }
-        </style>
-        <script id="vertexShader" type="vertex">
+    </style>
+    <script id="vertexShader" type="vertex">
             void main(){
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
 	    </script>
-        <script id="fragmentShader" type="fragment">
+    <script id="fragmentShader" type="fragment">
             void main(){
                 gl_FragColor = vec4(vec3(1.0, 1.0, 1.0), 1.0);
             }
 	    </script>
-    </head>
+</head>
 
-    <body>
-        <script type="module" src="index.js"></script>
-        <div id="gui-container"></div>
-    </body>
+<body>
+    <script type="module" src="index.js"></script>
+</body>
+
 </html>

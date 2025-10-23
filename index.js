@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import * as TWEEN from '@tweenjs/tween.js';
 import { Group } from '@tweenjs/tween.js';
-// import { CSS2DRenderer } from "three/examples/jsm/Addons.js";
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
+THREE.Cache.enabled = true;
 
 let scene = new THREE.Scene();
 let renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -17,10 +17,77 @@ initalizeScene();
 initalizeRenderer();
 initalizeCamera();
 
+// HTML INTEGRATION
+const labelRenderer = new CSS2DRenderer();
+let input, cPointLabel, audInput, aPointLabel, souInput;
+initalizeLabel();
+function initalizeLabel() {
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = "absolute";
+    labelRenderer.domElement.style.top = "0px";
+    labelRenderer.domElement.style.color = "#ffffff";
+    // labelRenderer.domElement.style.pointerEvents = "none";
+    document.body.appendChild(labelRenderer.domElement);
+
+    input = document.createElement("input");
+    input.id = "upload";
+    input.type = "file";
+    input.accept = ".mp3,audio/*";
+    cPointLabel = new CSS2DObject(input);
+    cPointLabel.position.set(0, 0, 0);
+    scene.add(cPointLabel);
+
+    audInput = document.createElement("audio");
+    audInput.id = "audio";
+    souInput = document.createElement("source");
+    souInput.src = "";
+    souInput.id = "src";
+    audInput.appendChild(souInput);
+    aPointLabel = new CSS2DObject(audInput);
+    aPointLabel.position.set(0, 0, 0);
+    scene.add(aPointLabel);
+}
+function handleFiles(event) {
+    var files = event.target.files;
+    souInput.src = URL.createObjectURL(files[0]);
+    initalizeSound(souInput.src);
+}
+input.addEventListener("change", handleFiles, false);
+
+let listener = new THREE.AudioListener();
+let audioLoader = new THREE.AudioLoader();
+let sound = new THREE.Audio(listener);
+let analyser = new THREE.AudioAnalyser(sound, 2048);
+initalizeSound("../sounds/UnprecedentedTraveler.mp3");
+camera.add(listener);
+// AUDIO
+function initalizeSound(file) {
+    console.log(file);
+    audioLoader.parse
+
+    audioLoader.load(file, function (buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(false);
+        sound.setVolume(1);
+        window.addEventListener("click", function () {
+            // sound.stop();
+            sound.play();
+        });
+    },
+        function (xhr) {
+            sound.stop();
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        function (err) {
+            // console.log(err + "did not load!");
+        }
+    );
+}
+
 // Automatically resizes the window.
 window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
-    // labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
@@ -114,23 +181,67 @@ function initalizeLights() {
     scene.add(spotLight2.target);
 }
 
-let listener = new THREE.AudioListener();
-let audioLoader = new THREE.AudioLoader();
-let sound = new THREE.Audio(listener);
-let analyser = new THREE.AudioAnalyser(sound, 2048);
-// let audioContext, analyser, audioElement, source;
-initalizeSound();
-// AUDIO
-function initalizeSound() {
-    camera.add(listener);
-    audioLoader.load("../sounds/UnprecedentedTraveler.mp3", function (buffer) {
-        sound.setBuffer(buffer);
-        sound.setLoop(false);
-        sound.setVolume(1);
-        window.addEventListener("click", function () {
-            sound.play();
-        });
-    });
+class AudioAnalyserEX {
+    data;
+    avg;
+    freq;
+    id;
+    
+    boostActivate = false;
+    freqPreLen = 15;
+    freqPre = [];
+    boostTime = 0;
+    boostActivateTime = 0;
+    boostCumulative = 0;
+    boostInetrpolate = 0;
+    boostCurrent = 0;
+    constructor(id) {
+        this.id = id;
+    }
+
+    freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength) {
+        var tEX = 0;
+        freqNew /= 255;
+        if (!analyser) return 0;
+
+        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreLen)) + hreshThold) && !this.boostActivate) {
+            this.boostActivate = true;
+            this.boostCumulative += boostAmount;
+            this.boostCurrent = this.boostInetrpolate;
+            this.boostTime = 0;
+            this.boostActivateTime = 0;
+            // console.log("BOOST!", freqNew, truncateAvg(this.freqPre, 0, this.freqPreLen) + hreshThold);
+            console.log("BOOST!", this.id);
+        }
+        if (this.boostActivate) {
+            this.boostActivateTime += dt / 1000;
+            if (this.boostActivateTime > boostActivateLength) {
+                this.boostActivate = false;
+            }
+        }
+        this.boostTime += (dt / 1000) / boostLength;
+        if (this.boostTime > 1) {
+            this.boostTime = 1;
+        }
+
+        this.boostInetrpolate = lerp(this.boostCurrent, this.boostCumulative, this.boostTime);
+
+        tEX = this.boostCumulative - this.boostInetrpolate;
+        this.freqPre.push(freqNew);
+        if (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
+
+        return tEX;
+    }
+
+    t = 0;
+    getInterpolation(freqNew, time, preTime){
+        
+        var yolo = ((freqNew / 255 * 2 * 2) ** 3) / 8;
+        dt  = time - preTime;
+        this.t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
+        this.t %= 1;
+        return this.t;
+    }
 }
 
 // ACTION!
@@ -138,18 +249,25 @@ var swaggest = 0;
 var swagger = 0;
 var dt = 0;
 var preTime = 0;
+var data = analyser.getFrequencyData();
+var avg = analyser.getAverageFrequency();
+const superAudioAnalyser1 = new AudioAnalyserEX("Kick!");
+const superAudioAnalyser2 = new AudioAnalyserEX("Mid!");
 function animate(time) {
     requestAnimationFrame(function loop(time) {
-        // groupObjectAnimateMusicType2.update(time);
         requestAnimationFrame(loop);
-    })
+    });
+    labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 
-    const data = analyser.getFrequencyData();
-    const avg = analyser.getAverageFrequency();
+    data = analyser.getFrequencyData();
+    avg = analyser.getAverageFrequency();
+
+    superAudioAnalyser1.freq = truncateAvg(data, 8, 18);
+    superAudioAnalyser2.freq = truncateAvg(data, 320, 600);
 
     // animateMusicType1(object2, time);
-    animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, data, avg, preTime);
+    animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
 
     // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
     // updateFrequencies(data);
@@ -191,80 +309,18 @@ const keyframesObjAnimateMusicType2 = [
     [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
 ];
 
-// var LinearEase = function (k) {
-//     return k;
-// };
-// keyframePositionDe(groupObjectAnimateMusicType2, object2, keyframesObjAnimateMusicType2, LinearEase, 3).start();
 
-let t = 0;
-function animateMusicType2(object, thisKeyframes, alph, time, data, avg, preTime) {
+function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
+    const avg = truncateAvg(data, 0, 1024);
+
+    object.rotation.x += rad(superAudioAnalyser1.freqBoost(superAudioAnalyser1.freq, dt, 0.05, 5, 0.25, 0.1));
+    object.scale.x = 1 + superAudioAnalyser2.freqBoost(superAudioAnalyser2.freq, dt, 0.03, 1, 0.4, 0.15);
+
     var keyframesParse = new Array();
     for (let i = 0; i < thisKeyframes.length; i++) {
         keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
     }
-
-    object.position.copy(keyframesParse.at(0));
-
-    avg = truncateAvg(data, 0, 1024);
-    const bass = truncateAvg(data, 8, 18);
-    const max = Math.max.apply(Math, data);
-    dt = time - preTime;
-
-    var yolo = ((avg / 255 * 2 * 2) ** 3) / 8;
-
-    t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
-    // console.log(dt / 1000, yolo * (dt / 1000));
-    t %= 1;
-
-    object.rotation.x += rad(bpmBoost(bass, avg, dt, 0.05, 5, 0.25, 0.1));
-
-    object.position.copy(catmullRomLoop(keyframesParse, t, alph));
-}
-
-let boostActivate = false;
-let avgPreLen = 4;
-let avgPre = [];
-let boostTime = 0;
-let boostActivateTime = 0;
-let boostCumulative = 0;
-let boostInetrpolate = 0;
-let boostCurrent = 0;
-function bpmBoost(bass, avg, dt, hreshThold, boostAmount, boostLength, boostActivateLength){
-    var tEX = 0;
-    bass /= 255;
-    avg /= 255;
-    if (!analyser) return 0;
-
-    // console.log(bass, avgPre + hreshThold);
-    if ((bass > truncateAvg(avgPre, 0, Math.min(avgPre.length, avgPreLen)) + hreshThold) && !boostActivate){
-        boostActivate = true;
-        // boostCumulative += boostAmount;
-        boostCumulative += boostAmount;
-        boostCurrent = boostInetrpolate;
-        boostTime = 0;
-        boostActivateTime = 0;
-        console.log("BOOST!", bass, truncateAvg(avgPre, 0, avgPreLen) + hreshThold);
-        // console.log(bass, "BALLS");
-    }
-    if (boostActivate){
-        boostActivateTime += dt / 1000;
-        if (boostActivateTime > boostActivateLength){  
-            boostActivate = false; 
-        }
-    }
-    boostTime += (dt / 1000) / boostLength;
-    if (boostTime > 1){  
-        boostTime = 1;
-    }
-
-    boostInetrpolate = lerp(boostCurrent, boostCumulative, boostTime);
-    
-    tEX = boostCumulative - boostInetrpolate;
-    avgPre.push(bass);
-    if (avgPre.length > avgPreLen) avgPre.shift();
-    
-
-    return tEX;
+    object.position.copy(catmullRomLoop(keyframesParse, superAudioAnalyser1.getInterpolation(avg, time, preTime), alph));
 }
 
 function catmullRomLoop(keyframesParse, t, alph) {
