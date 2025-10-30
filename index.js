@@ -3,7 +3,7 @@ import * as TWEEN from '@tweenjs/tween.js';
 import { Group } from '@tweenjs/tween.js';
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
-THREE.Cache.enabled = true;
+THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
 
 let scene = new THREE.Scene();
 let renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -54,13 +54,13 @@ function handleFiles(event) {
 }
 input.addEventListener("change", handleFiles, false);
 
+// AUDIO
 let listener = new THREE.AudioListener();
 let audioLoader = new THREE.AudioLoader();
 let sound = new THREE.Audio(listener);
 let analyser = new THREE.AudioAnalyser(sound, 2048);
-initalizeSound("../sounds/UnprecedentedTraveler.mp3");
+initalizeSound("../sounds/HALVEDHALVEDHALVED_Halv_ed.mp3");
 camera.add(listener);
-// AUDIO
 function initalizeSound(file) {
     console.log(file);
     audioLoader.parse
@@ -115,9 +115,9 @@ function initalizeCamera() {
     camera.rotation.z = rad(0);
 }
 
+// OBJECT(s) of interest
 let object2;
 initalizeObject2();
-// OBJECT(s) of interest
 function initalizeObject2() {
 
     object2 = new THREE.Mesh(
@@ -140,9 +140,9 @@ function initalizeObject2() {
     object2.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
 }
 
+// FLOOR
 let plane;
 initalizePlane();
-// FLOOR
 function initalizePlane() {
     plane = new THREE.Mesh(
         new THREE.PlaneGeometry(10000, 10000, 1, 1),
@@ -156,12 +156,11 @@ function initalizePlane() {
     plane.position.z = -10;
 }
 
-
+// LIGHT(S)
 let ambientLight1 = new THREE.AmbientLight(0xffffff, 0.25);
 let spotLight1 = new THREE.SpotLight(0xffffff, 5, 0, rad(-30), 1, 0);
 let spotLight2 = new THREE.SpotLight(0xffffff, 1, 0, rad(10), 1, 0);
 initalizeLights();
-// LIGHT(S)
 function initalizeLights() {
     scene.add(ambientLight1);
     spotLight1.position.set(0, -50, 0);
@@ -181,6 +180,7 @@ function initalizeLights() {
     scene.add(spotLight2.target);
 }
 
+// The meat of the extended audio analysis is within these functions!
 class AudioAnalyserEX {
     data;
     avg;
@@ -189,7 +189,7 @@ class AudioAnalyserEX {
     
     boostActivate = false;
     freqPreLen = 15;
-    freqPre = [];
+    freqPre = []; // Previous frequency data is stored as a list for accuracy.
     boostTime = 0;
     boostActivateTime = 0;
     boostCumulative = 0;
@@ -199,19 +199,22 @@ class AudioAnalyserEX {
         this.id = id;
     }
 
-    freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength) {
+    // Where the magical truly happens!
+    freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
         var tEX = 0;
         freqNew /= 255;
         if (!analyser) return 0;
 
-        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreLen)) + hreshThold) && !this.boostActivate) {
+        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreLen)) + hreshThold)
+            && !this.boostActivate && freqNew > volumeThresh
+        ) {
             this.boostActivate = true;
             this.boostCumulative += boostAmount;
             this.boostCurrent = this.boostInetrpolate;
             this.boostTime = 0;
             this.boostActivateTime = 0;
             // console.log("BOOST!", freqNew, truncateAvg(this.freqPre, 0, this.freqPreLen) + hreshThold);
-            console.log("BOOST!", this.id);
+            console.log("BOOST!", this.id, freqNew);
         }
         if (this.boostActivate) {
             this.boostActivateTime += dt / 1000;
@@ -233,9 +236,9 @@ class AudioAnalyserEX {
         return tEX;
     }
 
+    // Currently used for the shape. Could be it's own class?
     t = 0;
     getInterpolation(freqNew, time, preTime){
-        
         var yolo = ((freqNew / 255 * 2 * 2) ** 3) / 8;
         dt  = time - preTime;
         this.t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
@@ -245,14 +248,13 @@ class AudioAnalyserEX {
 }
 
 // ACTION!
-var swaggest = 0;
-var swagger = 0;
 var dt = 0;
 var preTime = 0;
-var data = analyser.getFrequencyData();
-var avg = analyser.getAverageFrequency();
+var data = analyser.getFrequencyData(); // Bands of frequencies.
+var avg = analyser.getAverageFrequency(); // General volume.
 const superAudioAnalyser1 = new AudioAnalyserEX("Kick!");
-const superAudioAnalyser2 = new AudioAnalyserEX("Mid!");
+const superAudioAnalyser2 = new AudioAnalyserEX("Mid !");
+const superAudioAnalyser3 = new AudioAnalyserEX("Bass!");
 function animate(time) {
     requestAnimationFrame(function loop(time) {
         requestAnimationFrame(loop);
@@ -265,41 +267,15 @@ function animate(time) {
 
     superAudioAnalyser1.freq = truncateAvg(data, 8, 18);
     superAudioAnalyser2.freq = truncateAvg(data, 320, 600);
+    superAudioAnalyser3.freq = truncateAvg(data, 18, 40);
 
-    // animateMusicType1(object2, time);
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
 
     // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
-    // updateFrequencies(data);
     preTime = time;
 }
 
-// Improved average calculation with emphasis on peaks
-function getWeightedAverage(array) {
-    if (array.length === 0) return 0;
-
-    let sum = 0;
-    let weight = 0;
-    let maxVal = 0;
-    const emphasizeFactor = 1.5; // Reduced from 1.8 for more linear response
-
-    for (let i = 0; i < array.length; i++) {
-        // Normalize value 0-1
-        const value = array[i] / 255;
-        maxVal = Math.max(maxVal, value);
-
-        // Apply non-linear emphasis to higher values
-        const emphasized = Math.pow(value, emphasizeFactor);
-
-        sum += emphasized;
-        weight++;
-    }
-
-    // Combine average with max value for better peak detection
-    const avg = sum / weight;
-    return avg * 0.7 + maxVal * 0.3; // Blend average and peak
-}
-
+// The path the shape moves along as kyframe data.
 var groupObjectAnimateMusicType2 = new Group();
 const keyframesObjAnimateMusicType2 = [
     [-5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
@@ -309,12 +285,12 @@ const keyframesObjAnimateMusicType2 = [
     [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
 ];
 
-
+// Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
 
-    object.rotation.x += rad(superAudioAnalyser1.freqBoost(superAudioAnalyser1.freq, dt, 0.05, 5, 0.25, 0.1));
-    object.scale.x = 1 + superAudioAnalyser2.freqBoost(superAudioAnalyser2.freq, dt, 0.03, 1, 0.4, 0.15);
+    object.rotation.x += rad(superAudioAnalyser1.freqBoost(superAudioAnalyser1.freq, dt, 0.05, 5, 0.25, 0.1, 0.75));
+    object.scale.x = 1 + superAudioAnalyser2.freqBoost(superAudioAnalyser2.freq, dt, 0.03, 1, 0.4, 0.15, 0.5);
 
     var keyframesParse = new Array();
     for (let i = 0; i < thisKeyframes.length; i++) {
@@ -323,6 +299,7 @@ function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     object.position.copy(catmullRomLoop(keyframesParse, superAudioAnalyser1.getInterpolation(avg, time, preTime), alph));
 }
 
+// Implementation of the Catmull Rom curve that the shape moves along the path of.
 function catmullRomLoop(keyframesParse, t, alph) {
 
     var prog = 1 + t * (keyframesParse.length);
@@ -369,89 +346,7 @@ function catmullRomLoop(keyframesParse, t, alph) {
     return new THREE.Vector3(px, py, pz);
 }
 
-// Using a formatted 2-D array of keyframe parameters, this iteratively sets up the position keyframes with De Casteljau's Construction.
-function keyframePositionDe(groupObject, object, thisKeyframes, easeKey, timeKey) {
-    var keyframesParse = new Array();
-    for (var i = 0; i < thisKeyframes.length; i++) {
-        keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
-    }
-    object2.position.copy(keyframesParse.at(0));
-
-    var catalyst = { t: 0 };
-    var masterTween = new TWEEN.Tween(catalyst)
-        .to({
-            t: 1
-        }, timeKey * 1000)
-        .onUpdate(function () {
-            var keyframesInterStart = keyframesParse.slice();
-            var keyframesInter = new Array();
-            for (var i = 0; i < keyframesParse.length - 1; i++) {
-                for (var j = 0; j < keyframesInterStart.length - 1; j++) {
-                    keyframesInter.push(new THREE.Vector3().lerpVectors(keyframesInterStart.at(j), keyframesInterStart.at(j + 1), catalyst.t));
-                }
-                keyframesInterStart = keyframesInter.slice();
-                keyframesInter = new Array();
-            }
-            object.position.copy(keyframesInterStart.pop());
-        })
-        .easing(easeKey)
-        .repeat(Infinity);
-
-    groupObject.add(masterTween);
-    return masterTween;
-}
-
-// Using a formatted 2-D array of keyframe parameters, this iteratively sets up the rotation keyframes with De Casteljau's Construction.
-function keyframeQuaternionDe(groupObject, object, thisKeyframes, easeKey, timeKey) {
-    var keyframesParse = new Array();
-    keyframesParse.push(new THREE.Quaternion().copy(object.quaternion));
-    for (var i = 0; i < thisKeyframes.length; i++) {
-        keyframesParse.push(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(thisKeyframes[i][4], thisKeyframes[i][6], thisKeyframes[i][5]).normalize(), rad(thisKeyframes[i][7])));
-    }
-
-    var catalyst = { t: 0 };
-    var masterTween = new TWEEN.Tween(catalyst)
-        .to({ t: 1 }, timeKey)
-        .onUpdate(function () {
-            var keyframesInterStart = keyframesParse.slice();
-            var keyframesInter = new Array();
-            for (var i = 0; i < keyframesParse.length - 1; i++) {
-                for (var j = 0; j < keyframesInterStart.length - 1; j++) {
-                    keyframesInter.push(new THREE.Quaternion().slerpQuaternions(keyframesInterStart.at(j), keyframesInterStart.at(j + 1), catalyst.t));
-                }
-                keyframesInterStart = keyframesInter.slice();
-                keyframesInter = new Array();
-            }
-            object.quaternion.copy(keyframesInterStart.pop());
-        })
-        .onComplete(function () {
-            object.quaternion.copy(keyframesParse.pop());
-        })
-        .easing(easeKey);
-
-    groupObject.add(masterTween);
-    return masterTween;
-}
-
-function animateMusicType1(object, time, data, avg, preTime) {
-    const max = Math.max.apply(Math, data);
-    const bass = truncateAvg(data, 4, 12);
-    dt = time - preTime;
-
-    var swag = (max / 255) * (avg / 255) * 2;
-    var swagger = (0 + swag ** 3) / (dt) * 2 + 0.005;
-    var swaggery = (0 + (swag / 2) ** 3) / (dt) * 100;
-    swaggest += swagger;
-    if (swaggest > rad(360)) swaggest -= rad(360);
-
-    object.rotation.z = swaggest;
-    object.scale.x = Math.max(lerp(object.scale.x, 1 + swaggery, 0.5), 1 + swaggery);
-    object.scale.y = Math.max(lerp(object.scale.y, 1 + swaggery, 0.5), 1 + swaggery);
-    object.scale.z = Math.max(lerp(object.scale.z, 1 + swaggery, 0.5), 1 + swaggery);
-
-    console.log(max, avg, swag, swagger, swaggery, swaggest);
-}
-
+// Helper function. Gets the average value of an array from index i to index k (exclusive).
 function truncateAvg(dataer, i, k) {
     if ((k - i) == 0) return dataer[i];
     var j = 0;
@@ -464,10 +359,12 @@ function truncateAvg(dataer, i, k) {
     return j / l;
 }
 
+// Helper Linear intERPolation function.
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
+// Helper degrees to radians function.
 function rad(x) {
     return x / 180 * Math.PI;
 }
