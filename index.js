@@ -59,8 +59,9 @@ let listener = new THREE.AudioListener();
 let audioLoader = new THREE.AudioLoader();
 let sound = new THREE.Audio(listener);
 let analyser = new THREE.AudioAnalyser(sound, 2048);
-initalizeSound("../sounds/HALVEDHALVEDHALVED_Halv_ed.mp3");
+initalizeSound("../sounds/CyclicUniverseTheory.mp3");
 camera.add(listener);
+let playing = false;
 function initalizeSound(file) {
     console.log(file);
     audioLoader.parse
@@ -72,10 +73,12 @@ function initalizeSound(file) {
         window.addEventListener("click", function () {
             // sound.stop();
             sound.play();
+            playing = true;
         });
     },
         function (xhr) {
             sound.stop();
+            playing = false;
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         function (err) {
@@ -158,8 +161,8 @@ function initalizePlane() {
 
 // LIGHT(S)
 let ambientLight1 = new THREE.AmbientLight(0xffffff, 0.25);
-let spotLight1 = new THREE.SpotLight(0xffffff, 5, 0, rad(-30), 1, 0);
-let spotLight2 = new THREE.SpotLight(0xffffff, 1, 0, rad(10), 1, 0);
+let spotLight1 = new THREE.SpotLight(0xff8000, 5, 0, rad(-30), 1, 0);
+let spotLight2 = new THREE.SpotLight(0x0080ff, 1, 0, rad(10), 1, 0);
 initalizeLights();
 function initalizeLights() {
     scene.add(ambientLight1);
@@ -239,11 +242,16 @@ class AudioAnalyserEX {
     // Currently used for the shape. Could be it's own class?
     t = 0;
     getInterpolation(freqNew, time, preTime){
-        var yolo = ((freqNew / 255 * 2 * 2) ** 3) / 8;
+        var yolo = AudioAnalyserEX.yolo(freqNew);
         dt  = time - preTime;
         this.t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
         this.t %= 1;
         return this.t;
+    }
+
+    // yolo
+    static yolo(freqNew){
+        return ((freqNew / 255 * 2) ** 3) / 8; 
     }
 }
 
@@ -252,9 +260,10 @@ var dt = 0;
 var preTime = 0;
 var data = analyser.getFrequencyData(); // Bands of frequencies.
 var avg = analyser.getAverageFrequency(); // General volume.
-const superAudioAnalyser1 = new AudioAnalyserEX("Kick!");
-const superAudioAnalyser2 = new AudioAnalyserEX("Mid !");
-const superAudioAnalyser3 = new AudioAnalyserEX("Bass!");
+const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
+const AudioAnalyserMid = new AudioAnalyserEX("Mid !");
+const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
+let sub, kick, bass, midL, mid, midH, high;
 function animate(time) {
     requestAnimationFrame(function loop(time) {
         requestAnimationFrame(loop);
@@ -264,12 +273,35 @@ function animate(time) {
 
     data = analyser.getFrequencyData();
     avg = analyser.getAverageFrequency();
+    sub = truncateAvg(data, 2, 8);
+    kick = truncateAvg(data, 8, 18);
+    bass = truncateAvg(data, 18, 40);
+    midL = truncateAvg(data, 40, 80);
+    mid = truncateAvg(data, 80, 160);
+    midH = truncateAvg(data, 160, 320);
+    high = truncateAvg(data, 320, 600);
 
-    superAudioAnalyser1.freq = truncateAvg(data, 8, 18);
-    superAudioAnalyser2.freq = truncateAvg(data, 320, 600);
-    superAudioAnalyser3.freq = truncateAvg(data, 18, 40);
+    AudioAnalyserKick.freq = kick;
+    AudioAnalyserMid.freq = mid;
+    AudioAnalyserBass.freq = bass;
 
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
+    // spotLight2.intensity = 1
+    // spotLight1.intensity = 5
+
+    if (playing){
+        ambientLight1.intensity = AudioAnalyserEX.yolo(avg * 2) * 0.5;
+        spotLight1.intensity = AudioAnalyserEX.yolo(midH) * 10 * 2;
+        spotLight2.intensity = AudioAnalyserEX.yolo(midL) * 2 * 2;
+        // console.log((avg * 2) / 255, midL / 255, midH / 255);
+    }
+    else{
+        ambientLight1.intensity = 0.25;
+        spotLight1.intensity = 5 * 2;
+        spotLight2.intensity = 1 * 2;
+    }
+    
+    // console.log(spotLight1.intensity)
 
     // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
     preTime = time;
@@ -289,14 +321,17 @@ const keyframesObjAnimateMusicType2 = [
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
 
-    object.rotation.x += rad(superAudioAnalyser1.freqBoost(superAudioAnalyser1.freq, dt, 0.05, 5, 0.25, 0.1, 0.75));
-    object.scale.x = 1 + superAudioAnalyser2.freqBoost(superAudioAnalyser2.freq, dt, 0.03, 1, 0.4, 0.15, 0.5);
+    object.rotation.x += rad(AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, dt, 0.03, 5, 0.50, 0.1, 0.5));
+    object.scale.x = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
+    object.scale.y = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
+    object.scale.z = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
 
     var keyframesParse = new Array();
     for (let i = 0; i < thisKeyframes.length; i++) {
         keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
     }
-    object.position.copy(catmullRomLoop(keyframesParse, superAudioAnalyser1.getInterpolation(avg, time, preTime), alph));
+    // console.log(AudioAnalyserKick.getInterpolation(avg, time, preTime));
+    object.position.copy(catmullRomLoop(keyframesParse, AudioAnalyserKick.getInterpolation(avg, time, preTime), alph));
 }
 
 // Implementation of the Catmull Rom curve that the shape moves along the path of.

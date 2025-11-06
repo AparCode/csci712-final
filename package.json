@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@tweenjs/tween.js": "^25.0.0",
+    "@types/three": "^0.180.0",
+    "gh-pages": "^6.3.0",
+    "three": "^0.180.0",
+    "three.js": "^0.77.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.4"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "deploy": "gh-pages -d dist"
+  }
+}
