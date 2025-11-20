@@ -23,8 +23,6 @@ initalizeCamera();
 const labelRenderer = new CSS2DRenderer();
 let input, cPointLabel, audInput, aPointLabel, souInput;
 initalizeUploadFileLabel();
-initalizePlayButton();
-initalizePauseButton();
 
 // Upload file input
 function initalizeUploadFileLabel() {
@@ -70,6 +68,7 @@ function pauseAudio() {
 }
 
 let playButtonLabel;
+initalizePlayButton();
 function initalizePlayButton(){
     let playButton = document.createElement("button");
     playButton.id = "play";
@@ -86,6 +85,7 @@ function initalizePlayButton(){
 }
 
 let pauseButtonLabel;
+initalizePauseButton();
 function initalizePauseButton(){
     let pauseButton = document.createElement("button");
     pauseButton.id = "pause";
@@ -100,9 +100,6 @@ function initalizePauseButton(){
     pauseButtonLabel.position.set(0, 0, 0);
     scene.add(pauseButtonLabel);
 }
-
-
-
 
 function handleFiles(event) {
     var files = event.target.files;
@@ -125,8 +122,10 @@ function initalizeSound(file) {
 
     audioLoader.load(file, function (buffer) {
         sound.setBuffer(buffer);
+        sound.autoplay = false;
         sound.setLoop(false);
         sound.setVolume(1);
+        sound.stop();
         window.addEventListener("click", function () {
             // sound.stop();
             sound.play();
@@ -142,6 +141,7 @@ function initalizeSound(file) {
             console.log(err + "failed to load.");
         }
     );
+    
 }
 
 // Automatically resizes the window.
