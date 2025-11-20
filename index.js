@@ -3,6 +3,7 @@ import * as TWEEN from '@tweenjs/tween.js';
 import { Group } from '@tweenjs/tween.js';
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
+import { label } from "three/tsl";
 THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
 
 let scene = new THREE.Scene();
@@ -20,8 +21,12 @@ initalizeCamera();
 // HTML INTEGRATION
 const labelRenderer = new CSS2DRenderer();
 let input, cPointLabel, audInput, aPointLabel, souInput;
-initalizeLabel();
-function initalizeLabel() {
+initalizeUploadFileLabel();
+initalizePlayButton();
+initalizePauseButton();
+
+// Upload file input
+function initalizeUploadFileLabel() {
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = "absolute";
     labelRenderer.domElement.style.top = "0px";
@@ -47,6 +52,57 @@ function initalizeLabel() {
     aPointLabel.position.set(0, 0, 0);
     scene.add(aPointLabel);
 }
+
+// Button functionality
+function playAudio() {
+    if (!playing) {
+        sound.play();
+        playing = true;
+    }
+}
+
+function pauseAudio() {
+    if (playing) {
+        sound.pause();
+        playing = false;
+    }
+}
+
+let playButtonLabel;
+function initalizePlayButton(){
+    let playButton = document.createElement("button");
+    playButton.id = "play";
+    playButton.innerHTML = "Play";
+    playButton.style.position = "absolute";
+    playButton.style.top = "10px";
+    playButton.style.left = "10px";
+    playButton.style.zIndex = "1";
+    playButton.onclick = playAudio;
+    document.body.appendChild(playButton);
+    playButtonLabel = new CSS2DObject(playButton);
+    playButtonLabel.position.set(0, 0, 0);
+    scene.add(playButtonLabel);
+}
+
+let pauseButtonLabel;
+function initalizePauseButton(){
+    let pauseButton = document.createElement("button");
+    pauseButton.id = "pause";
+    pauseButton.innerHTML = "Pause";
+    pauseButton.style.position = "absolute";
+    pauseButton.style.top = "10px";
+    pauseButton.style.left = "10px";
+    pauseButton.style.zIndex = "1";
+    pauseButton.onclick = pauseAudio;
+    document.body.appendChild(pauseButton);
+    pauseButtonLabel = new CSS2DObject(pauseButton);
+    pauseButtonLabel.position.set(0, 0, 0);
+    scene.add(pauseButtonLabel);
+}
+
+
+
+
 function handleFiles(event) {
     var files = event.target.files;
     souInput.src = URL.createObjectURL(files[0]);
@@ -183,6 +239,7 @@ function initalizeLights() {
     scene.add(spotLight2.target);
 }
 
+
 // The meat of the extended audio analysis is within these functions!
 class AudioAnalyserEX {
     data;
@@ -263,6 +320,7 @@ var avg = analyser.getAverageFrequency(); // General volume.
 const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
 const AudioAnalyserMid = new AudioAnalyserEX("Mid !");
 const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
+
 let sub, kick, bass, midL, mid, midH, high;
 function animate(time) {
     requestAnimationFrame(function loop(time) {
