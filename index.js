@@ -1,10 +1,11 @@
 import * as THREE from "three";
-import * as TWEEN from '@tweenjs/tween.js';
 import { Group } from '@tweenjs/tween.js';
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
 THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
+import { GUI } from 'dat.gui'
 
+let gui = new GUI();
 let scene = new THREE.Scene();
 let renderer = new THREE.WebGLRenderer({ antialias: false });
 let camera = new THREE.PerspectiveCamera(
@@ -82,7 +83,7 @@ function initalizeSound(file) {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         function (err) {
-            // console.log(err + "did not load!");
+            console.log(err + "failed to load.");
         }
     );
 }
@@ -216,7 +217,6 @@ class AudioAnalyserEX {
             this.boostCurrent = this.boostInetrpolate;
             this.boostTime = 0;
             this.boostActivateTime = 0;
-            // console.log("BOOST!", freqNew, truncateAvg(this.freqPre, 0, this.freqPreLen) + hreshThold);
             console.log("BOOST!", this.id, freqNew);
         }
         if (this.boostActivate) {
@@ -263,7 +263,8 @@ var avg = analyser.getAverageFrequency(); // General volume.
 const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
 const AudioAnalyserMid = new AudioAnalyserEX("Mid !");
 const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
-let sub, kick, bass, midL, mid, midH, high;
+const AudioAnalyserSub = new AudioAnalyserEX("Sub !");
+let sub, kick, bass, midL, mid, midH, high, vhigh;
 function animate(time) {
     requestAnimationFrame(function loop(time) {
         requestAnimationFrame(loop);
@@ -280,28 +281,27 @@ function animate(time) {
     mid = truncateAvg(data, 80, 160);
     midH = truncateAvg(data, 160, 320);
     high = truncateAvg(data, 320, 600);
+    vhigh = truncateAvg(data, 600, 1000);
 
     AudioAnalyserKick.freq = kick;
     AudioAnalyserMid.freq = mid;
     AudioAnalyserBass.freq = bass;
+    AudioAnalyserSub.freq = sub;
 
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
     // spotLight2.intensity = 1
     // spotLight1.intensity = 5
 
     if (playing){
-        ambientLight1.intensity = AudioAnalyserEX.yolo(avg * 2) * 0.5;
-        spotLight1.intensity = AudioAnalyserEX.yolo(midH) * 10 * 2;
+        ambientLight1.intensity = AudioAnalyserEX.yolo(midH * 1.25) * 0.5;
+        spotLight1.intensity = AudioAnalyserEX.yolo(mid) * 5 * 2;
         spotLight2.intensity = AudioAnalyserEX.yolo(midL) * 2 * 2;
-        // console.log((avg * 2) / 255, midL / 255, midH / 255);
     }
     else{
         ambientLight1.intensity = 0.25;
         spotLight1.intensity = 5 * 2;
         spotLight2.intensity = 1 * 2;
     }
-    
-    // console.log(spotLight1.intensity)
 
     // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
     preTime = time;
@@ -317,20 +317,54 @@ const keyframesObjAnimateMusicType2 = [
     [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
 ];
 
+class aaEXparam {
+    id;
+    minVolumeDifference;
+    boostAmount;
+    boostLength;
+    boostCooldown;
+    minVolume;
+    constructor(id, a, b, c, d, e) {
+        this.id = id;
+        this.minVolumeDifference = a;
+        this.boostAmount = b;
+        this.boostLength = c;
+        this.boostCooldown = d;
+        this.minVolume = e;
+    }
+}
+
+var kickParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5);
+const kickDetec = gui.addFolder('Kick Detection');
+kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
+kickDetec.add(kickParam, 'boostAmount', 0, 10);
+kickDetec.add(kickParam, 'boostLength', 0, 2.0);
+kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
+kickDetec.add(kickParam, 'minVolume', 0, 0.9);
+kickDetec.open();
+var bassParam = new aaEXparam("kick", 0.05, 0.2, 1.0, 0.1, 0.5);
+const bassDetec = gui.addFolder('Bass Detection');
+bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
+bassDetec.add(bassParam, 'boostAmount', 0, 10);
+bassDetec.add(bassParam, 'boostLength', 0, 2.0);
+bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
+bassDetec.add(bassParam, 'minVolume', 0, 0.9);
+bassDetec.open();
+
 // Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
 
-    object.rotation.x += rad(AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, dt, 0.03, 5, 0.50, 0.1, 0.5));
-    object.scale.x = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
-    object.scale.y = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
-    object.scale.z = 1 + AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, 0.03, 0.2, 1.0, 0.1, 0.5);
+    object.rotation.x += rad(0.5) + rad(AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, bassParam.minVolumeDifference, bassParam.boostAmount, bassParam.boostLength, bassParam.boostCooldown, bassParam.minVolume));
+    const butHeresTheScaler = AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, dt, kickParam.minVolumeDifference, kickParam.boostAmount, kickParam.boostLength, kickParam.boostCooldown, kickParam.minVolume);
+    object.scale.x = 1 + butHeresTheScaler;
+    object.scale.y = 1 + butHeresTheScaler;
+    object.scale.z = 1 + butHeresTheScaler;
 
     var keyframesParse = new Array();
     for (let i = 0; i < thisKeyframes.length; i++) {
         keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
     }
-    // console.log(AudioAnalyserKick.getInterpolation(avg, time, preTime));
     object.position.copy(catmullRomLoop(keyframesParse, AudioAnalyserKick.getInterpolation(avg, time, preTime), alph));
 }
 
