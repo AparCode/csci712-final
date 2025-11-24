@@ -37,6 +37,8 @@ function initalizeUploadFileLabel() {
     input.id = "upload";
     input.type = "file";
     input.accept = ".mp3,audio/*";
+    input.style.top = "calc(-50vh + 2em)";
+    input.style.left = "calc(-50vw + 10em)";
     cPointLabel = new CSS2DObject(input);
     cPointLabel.position.set(0, 0, 0);
     scene.add(cPointLabel);
@@ -74,8 +76,8 @@ function initalizePlayButton(){
     playButton.id = "play";
     playButton.innerHTML = "Play";
     playButton.style.position = "absolute";
-    playButton.style.top = "10px";
-    playButton.style.left = "10px";
+    playButton.style.top = "calc(-50vh + 4em)";
+    playButton.style.left = "calc(-50vw + 3em)";
     playButton.style.zIndex = "1";
     playButton.onclick = playAudio;
     document.body.appendChild(playButton);
@@ -91,8 +93,8 @@ function initalizePauseButton(){
     pauseButton.id = "pause";
     pauseButton.innerHTML = "Pause";
     pauseButton.style.position = "absolute";
-    pauseButton.style.top = "10px";
-    pauseButton.style.left = "10px";
+    pauseButton.style.top = "calc(-50vh + 6em)";
+    pauseButton.style.left = "calc(-50vw + 3em)";
     pauseButton.style.zIndex = "1";
     pauseButton.onclick = pauseAudio;
     document.body.appendChild(pauseButton);
@@ -126,11 +128,11 @@ function initalizeSound(file) {
         sound.setLoop(false);
         sound.setVolume(1);
         sound.stop();
-        window.addEventListener("click", function () {
-            // sound.stop();
-            sound.play();
-            playing = true;
-        });
+        // window.addEventListener("click", function () {
+        //     // sound.stop();
+        //     sound.play();
+        //     playing = true;
+        // });
     },
         function (xhr) {
             sound.stop();
@@ -391,22 +393,25 @@ class aaEXparam {
     }
 }
 
-var kickParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5);
-const kickDetec = gui.addFolder('Kick Detection');
-kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
-kickDetec.add(kickParam, 'boostAmount', 0, 10);
-kickDetec.add(kickParam, 'boostLength', 0, 2.0);
-kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
-kickDetec.add(kickParam, 'minVolume', 0, 0.9);
-kickDetec.open();
-var bassParam = new aaEXparam("kick", 0.05, 0.2, 1.0, 0.1, 0.5);
-const bassDetec = gui.addFolder('Bass Detection');
-bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
-bassDetec.add(bassParam, 'boostAmount', 0, 10);
-bassDetec.add(bassParam, 'boostLength', 0, 2.0);
-bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
-bassDetec.add(bassParam, 'minVolume', 0, 0.9);
-bassDetec.open();
+let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5);
+let bassParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5);
+initializeObjectGUI();
+function initializeObjectGUI() {
+    const kickDetec = gui.addFolder('Kick Detection');
+    kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
+    kickDetec.add(kickParam, 'boostAmount', 0, 10);
+    kickDetec.add(kickParam, 'boostLength', 0, 2.0);
+    kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
+    kickDetec.add(kickParam, 'minVolume', 0, 0.9);
+    kickDetec.open();
+    const bassDetec = gui.addFolder('Bass Detection');
+    bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
+    bassDetec.add(bassParam, 'boostAmount', 0, 10);
+    bassDetec.add(bassParam, 'boostLength', 0, 2.0);
+    bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
+    bassDetec.add(bassParam, 'minVolume', 0, 0.9);
+    bassDetec.open();   
+}
 
 // Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
