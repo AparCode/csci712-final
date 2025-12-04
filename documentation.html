@@ -9,23 +9,39 @@
         <h1>Three.js Music Visualizer</h1>
         <h2>Goal</h2>
         <p>
-            What you set out to do
+            <!-- What you set out to do -->
+            Three.js is a javascript library that provides tools to create animations in 3-dimensional environments able to be deployed on or as websites.
+            The creation of audiovisual experiences with only a couple audio tracks in mind using Three.js is quite popular, but music visualizers that are able to adapt to many audio tracks are comparatively scarce.
+            Looking to fill in this niche, this project sets out to create a music visualizer with Three.js that is simple, but also practical and visually striking. The core of the project is the extended audio analysis functionality that drives the animation in real time, able to react dynamically to user-uploaded audio (ideally music).
         </p>
         <h2>Algorithms</h2>
         <p>
-            How you went about it
+            <!-- How you went about it -->
+            The Three.js framework provides functions to perform basic audio analysis that results in frequency bands. When considering the ways this can be used for logic behind extended audio analysis, the TouchDesigner software's audio analysis functions came into mind for how it is similarly can be used for music visualizers. Compared to TouchDesigner, Three.js lacks a spectralizer function with a logarithmic scale. As a result, an intuitive solution of using taking the average of logarithmic audio spectrum became a sizable roadblock.
+            Rather than backporting TouchDesigner's audio spectrum functionality into Three.js, we opted for a different approach. Given a frequency range and recorded instances of the overall volume of those ranges within a short period of time, peaks in this volume can be identified and then activate an instantaneous action.
+
+            In addition, to provide visual applications of the extended audio analysis, the animation includes a scene of an object that emits particles when the peaks are activated and traveling along a curved loop. These both are done with custom implementations of the Catmull-Rom curve and a particle system, built from previous class assignments.
         </p>
         <h2>Implementation</h2>
         <p>
-            How you built it
+            <!-- How you built it -->
+             <!-- This part especially could use some more meat on its bones! -->
+
+            Applications of audio analysis is a rather heuristic process because of how varying the audio itself can be. Because of this, a lot of the uses of the implemented extended audio analysis use a lot of parameters, where a user interface in the animation itself was added to control these parameters in case the default settings did not suit the song. The lights and the movement along the Catmull-Rom curve use a basic solution that takes the average of selected frequency bands and applies an exponential scale, while the instantaneous actions of the object and particle systems use the more in-depth peak detection.
         </p>
         <h2>Results</h2>
         <p>
-            How it looked
+            <!-- How it looked -->
+            <!-- This part especially could use some more meat on its bones! -->
+
+            The resulting animation can be interacted with at INSERT_LINK_HERE!
+            The default parameters for the extended audio analysis were largely made for EDM and hardcore techno music, seen with how the object reacts to frequency bands dedicated to the bass and "kick" frequencies of the music. The lights also respond to low, medium, and high frequencies, allowing for gradual low-pass and high-pass filters to appear as if each light turns on in a sequence.
         </p>
         <h2>Future Work</h2>
         <p>
-            What's left to be done
+            <!-- What's left to be done -->
+            There are a few things that can be done to improve upon the extended audio analysis. This includes automatic tuning of parameters based on properties of the source audio and possibly adding surround sound functionality where the left and right channels can be used independently. In addition, the current implementation of the extended audio analysis is dependent on the framerate of the animation, where lower framerates can severely hinder the intended behavior.
+            With the logic behind a more in-depth music visualizer largely realized, there is a lot that can be done with applying it in artistic settings. An early idea that project had was the ability to switch between a couple of different visualizers that all use the same extended audio analysis, for example.
         </p>
     </body>
 </head>

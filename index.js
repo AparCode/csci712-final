@@ -115,7 +115,7 @@ let listener = new THREE.AudioListener();
 let audioLoader = new THREE.AudioLoader();
 let sound = new THREE.Audio(listener);
 let analyser = new THREE.AudioAnalyser(sound, 2048);
-initalizeSound("../sounds/CyclicUniverseTheory.mp3");
+initalizeSound("../sounds/LA8YRNTH.mp3");
 camera.add(listener);
 let playing = false;
 function initalizeSound(file) {
@@ -301,7 +301,7 @@ class AudioAnalyserEX {
     // Currently used for the shape. Could be it's own class?
     t = 0;
     getInterpolation(freqNew, time, preTime){
-        var yolo = AudioAnalyserEX.yolo(freqNew);
+        var yolo = AudioAnalyserEX.yolo(freqNew * 2);
         dt  = time - preTime;
         this.t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
         this.t %= 1;
@@ -314,15 +314,59 @@ class AudioAnalyserEX {
     }
 }
 
+class aaEXparam {
+    id;
+    startFreqency;
+    endFreqency;
+    minVolumeDifference;
+    boostAmount;
+    boostLength;
+    boostCooldown;
+    minVolume;
+    constructor(id, a, b, c, d, e, f, g) {
+        this.id = id;
+        this.startFreqency = f;
+        this.endFreqency = g;
+        this.minVolumeDifference = a;
+        this.boostAmount = b;
+        this.boostLength = c;
+        this.boostCooldown = d;
+        this.minVolume = e;
+    }
+}
+
+let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
+let bassParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
+let kickDetec, bassDetec;
+initializeObjectGUI();
+function initializeObjectGUI() {
+    kickDetec = gui.addFolder('Kick Detection');
+    kickDetec.add(bassParam, 'startFreqency', 2, 18);
+    kickDetec.add(bassParam, 'endFreqency', 8, 40);
+    kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
+    kickDetec.add(kickParam, 'boostAmount', 0, 10);
+    kickDetec.add(kickParam, 'boostLength', 0, 2.0);
+    kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
+    kickDetec.add(kickParam, 'minVolume', 0, 0.9);
+    kickDetec.open();
+    bassDetec = gui.addFolder('Bass Detection');
+    bassDetec.add(bassParam, 'startFreqency', 8, 40);
+    bassDetec.add(bassParam, 'endFreqency', 18, 80);
+    bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
+    bassDetec.add(bassParam, 'boostAmount', 0, 10);
+    bassDetec.add(bassParam, 'boostLength', 0, 2.0);
+    bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
+    bassDetec.add(bassParam, 'minVolume', 0, 0.9);
+    bassDetec.open();   
+}
+
 // ACTION!
 var dt = 0;
 var preTime = 0;
 var data = analyser.getFrequencyData(); // Bands of frequencies.
 var avg = analyser.getAverageFrequency(); // General volume.
 const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
-const AudioAnalyserMid = new AudioAnalyserEX("Mid !");
 const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
-const AudioAnalyserSub = new AudioAnalyserEX("Sub !");
 let sub, kick, bass, midL, mid, midH, high, vhigh;
 function animate(time) {
     requestAnimationFrame(function loop(time) {
@@ -342,10 +386,8 @@ function animate(time) {
     high = truncateAvg(data, 320, 600);
     vhigh = truncateAvg(data, 600, 1000);
 
-    AudioAnalyserKick.freq = kick;
-    AudioAnalyserMid.freq = mid;
-    AudioAnalyserBass.freq = bass;
-    AudioAnalyserSub.freq = sub;
+    AudioAnalyserKick.freq = truncateAvg(data, kickParam.startFreqency, kickParam.endFreqency);
+    AudioAnalyserBass.freq = truncateAvg(data, bassParam.startFreqency, bassParam.endFreqency);
 
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
     // spotLight2.intensity = 1
@@ -375,43 +417,6 @@ const keyframesObjAnimateMusicType2 = [
     [5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
     [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
 ];
-
-class aaEXparam {
-    id;
-    minVolumeDifference;
-    boostAmount;
-    boostLength;
-    boostCooldown;
-    minVolume;
-    constructor(id, a, b, c, d, e) {
-        this.id = id;
-        this.minVolumeDifference = a;
-        this.boostAmount = b;
-        this.boostLength = c;
-        this.boostCooldown = d;
-        this.minVolume = e;
-    }
-}
-
-let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5);
-let bassParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5);
-initializeObjectGUI();
-function initializeObjectGUI() {
-    const kickDetec = gui.addFolder('Kick Detection');
-    kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
-    kickDetec.add(kickParam, 'boostAmount', 0, 10);
-    kickDetec.add(kickParam, 'boostLength', 0, 2.0);
-    kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
-    kickDetec.add(kickParam, 'minVolume', 0, 0.9);
-    kickDetec.open();
-    const bassDetec = gui.addFolder('Bass Detection');
-    bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
-    bassDetec.add(bassParam, 'boostAmount', 0, 10);
-    bassDetec.add(bassParam, 'boostLength', 0, 2.0);
-    bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
-    bassDetec.add(bassParam, 'minVolume', 0, 0.9);
-    bassDetec.open();   
-}
 
 // Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
