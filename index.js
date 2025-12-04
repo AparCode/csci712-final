@@ -182,6 +182,21 @@ let object2;
 initalizeObject2();
 function initalizeObject2() {
 
+    //Adding a particle system to the object
+    const object2_particles = new THREE.BufferGeometry();
+    const particlesCount = 1000;
+    const posArray = new Float32Array(particlesCount * 3);
+    for (let i = 0; i < particlesCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 20;
+    }
+    object2_particles.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const object2_particles_material = new THREE.PointsMaterial({
+        size: 0.1,
+        color: 0xffffff
+    });
+    const object2_particleSystem = new THREE.Points(object2_particles, object2_particles_material);
+    scene.add(object2_particleSystem);
+
     object2 = new THREE.Mesh(
         // new THREE.TorusGeometry(5, 2, 12, 48, rad(360)),
         new THREE.IcosahedronGeometry(10, 1),
@@ -200,6 +215,10 @@ function initalizeObject2() {
     scene.add(object2);
     object2.position.set(0.0, 0.0, 10.0);
     object2.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
+
+    // Sync the particle system with the object.
+    object2_particleSystem.position.copy(object2.position);
+    object2_particleSystem.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
 }
 
 // FLOOR
@@ -390,6 +409,9 @@ function animate(time) {
     AudioAnalyserBass.freq = truncateAvg(data, bassParam.startFreqency, bassParam.endFreqency);
 
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
+
+    // Default light intensities
+    // ambientLight1.intensity = 0.25
     // spotLight2.intensity = 1
     // spotLight1.intensity = 5
 
