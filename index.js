@@ -33,7 +33,7 @@ initalizeUploadFileLabel();
 // Upload file input
 function initalizeUploadFileLabel() {
     labelRenderer.setSize(300, 200);
-    console.log(labelRenderer.getSize());
+    // console.log(labelRenderer.getSize());
     labelRenderer.domElement.style.position = "absolute";
     labelRenderer.domElement.style.top = "calc(100vh - 200px)";
     labelRenderer.domElement.style.color = "#ffffff";
@@ -127,7 +127,7 @@ initalizeSound("../sounds/LA8YRNTH.mp3");
 camera.add(listener);
 let playing = false;
 function initalizeSound(file) {
-    console.log(file);
+    // console.log(file);
     audioLoader.parse
 
     audioLoader.load(file, function (buffer) {
@@ -145,10 +145,10 @@ function initalizeSound(file) {
         function (xhr) {
             sound.stop();
             playing = false;
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         function (err) {
-            console.log(err + "failed to load.");
+            // console.log(err + "failed to load.");
         }
     );
     
@@ -291,6 +291,8 @@ class AudioAnalyserEX {
 
     // Where the magical truly happens!
     freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
+        this.freqPreLen = Math.round(60 / (480 / (1000 / dt))); // This allows it to be less-effected by framerate!
+        // console.log(this.freqPreLen);
         var tEX = 0;
         freqNew /= 255;
         if (!analyser) return 0;
@@ -320,7 +322,7 @@ class AudioAnalyserEX {
 
         tEX = this.boostCumulative - this.boostInetrpolate;
         this.freqPre.push(freqNew);
-        if (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
+        while (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
 
         return tEX;
     }
@@ -367,7 +369,7 @@ let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
-    kickDetec = gui.addFolder('Kick Detection');
+    kickDetec = gui.addFolder('Kick Detection ~ Object Spin');
     kickDetec.add(bassParam, 'startFreqency', 2, 18);
     kickDetec.add(bassParam, 'endFreqency', 8, 40);
     kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
@@ -376,7 +378,7 @@ function initializeObjectGUI() {
     kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
     kickDetec.add(kickParam, 'minVolume', 0, 0.9);
     kickDetec.open();
-    bassDetec = gui.addFolder('Bass Detection');
+    bassDetec = gui.addFolder('Bass Detection ~ Object Size Burst');
     bassDetec.add(bassParam, 'startFreqency', 8, 40);
     bassDetec.add(bassParam, 'endFreqency', 18, 80);
     bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
@@ -396,9 +398,9 @@ const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
 const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
 let sub, kick, bass, midL, mid, midH, high, vhigh;
 function animate(time) {
-    requestAnimationFrame(function loop(time) {
-        requestAnimationFrame(loop);
-    });
+    // requestAnimationFrame(function loop(time) {
+    //     requestAnimationFrame(loop);
+    // }); // THIS IS BUILDS TOWARDS A MAJOR PERFORMANCE DECREASE, IT TURNS OUT!
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 
@@ -419,9 +421,9 @@ function animate(time) {
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
 
     // Default light intensities
-    // ambientLight1.intensity = 0.25
-    // spotLight2.intensity = 1
-    // spotLight1.intensity = 5
+    ambientLight1.intensity = 0.25
+    spotLight2.intensity = 1
+    spotLight1.intensity = 5
 
     if (playing){
         ambientLight1.intensity = AudioAnalyserEX.yolo(midH * 1.25) * 0.5;

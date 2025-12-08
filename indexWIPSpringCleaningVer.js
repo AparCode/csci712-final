@@ -57,10 +57,12 @@ function initializeRenderer() {
 const labelRenderer = new CSS2DRenderer();
 initializeUserLabel();
 function initializeUserLabel(){
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(300, 200);
+    // console.log(labelRenderer.getSize());
     labelRenderer.domElement.style.position = "absolute";
-    labelRenderer.domElement.style.top = "0px";
+    labelRenderer.domElement.style.top = "calc(100vh - 200px)";
     labelRenderer.domElement.style.color = "#ffffff";
+    // labelRenderer.domElement.style.zIndex = "-1";
     // labelRenderer.domElement.style.pointerEvents = "none";
     document.body.appendChild(labelRenderer.domElement);
 }
@@ -284,6 +286,7 @@ class AudioAnalyserEX {
      * Multiple boosts can occur simutaneously, but the boost length does not stack.
      */
     freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
+        this.freqPreLen = Math.round(60 / (240 / (1000 / dt))); // This allows it to be less-effected by framerate!
         var tEX = 0;
         freqNew /= 255; // Makes every frequency band out of 1.
         if (!analyser) return 0;
@@ -314,7 +317,7 @@ class AudioAnalyserEX {
 
         tEX = this.boostCumulative - this.boostInetrpolate;
         this.freqPre.push(freqNew);
-        if (this.freqPre.length > this.freqPreMax) this.freqPre.shift();
+        while (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
 
         return tEX;
     }
@@ -534,9 +537,9 @@ let AudioAnalyserKick = new AudioAnalyserEX("Kick!");
 let AudioAnalyserBass = new AudioAnalyserEX("Bass!");
 let sub, kick, bass, midL, mid, midH, high, vhigh;
 function animate(time) {
-    requestAnimationFrame(function loop(time) {
-        requestAnimationFrame(loop);
-    });
+    // requestAnimationFrame(function loop(time) {
+    //     requestAnimationFrame(loop);
+    // }); // THIS IS BUILDS TOWARDS A MAJOR PERFORMANCE DECREASE, IT TURNS OUT!
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 
