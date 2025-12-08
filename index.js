@@ -365,34 +365,26 @@ class aaEXparam {
 let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
 let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec;
-// initializeObjectGUI();
-// function initializeObjectGUI() {
-//     kickDetec = gui.addFolder('Kick Detection');
-//     kickDetec.add(bassParam, 'startFreqency', 2, 18);
-//     kickDetec.add(bassParam, 'endFreqency', 8, 40);
-//     kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
-//     kickDetec.add(kickParam, 'boostAmount', 0, 10);
-//     kickDetec.add(kickParam, 'boostLength', 0, 2.0);
-//     kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
-//     kickDetec.add(kickParam, 'minVolume', 0, 0.9);
-//     kickDetec.open();
-//     bassDetec = gui.addFolder('Bass Detection');
-//     bassDetec.add(bassParam, 'startFreqency', 8, 40);
-//     bassDetec.add(bassParam, 'endFreqency', 18, 80);
-//     bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
-//     bassDetec.add(bassParam, 'boostAmount', 0, 10);
-//     bassDetec.add(bassParam, 'boostLength', 0, 2.0);
-//     bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
-//     bassDetec.add(bassParam, 'minVolume', 0, 0.9);
-//     bassDetec.open();   
-// }
-
-let damnParam = new aaEXparam("damn", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
 initializeObjectGUI();
 function initializeObjectGUI() {
-    var testGUI = gui.addFolder('testFOLDER');
-    testGUI.add(damnParam, 'startFreqency', 0, 1);
-    testGUI.open(); 
+    kickDetec = gui.addFolder('Kick Detection');
+    kickDetec.add(bassParam, 'startFreqency', 2, 18);
+    kickDetec.add(bassParam, 'endFreqency', 8, 40);
+    kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
+    kickDetec.add(kickParam, 'boostAmount', 0, 10);
+    kickDetec.add(kickParam, 'boostLength', 0, 2.0);
+    kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
+    kickDetec.add(kickParam, 'minVolume', 0, 0.9);
+    kickDetec.open();
+    bassDetec = gui.addFolder('Bass Detection');
+    bassDetec.add(bassParam, 'startFreqency', 8, 40);
+    bassDetec.add(bassParam, 'endFreqency', 18, 80);
+    bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
+    bassDetec.add(bassParam, 'boostAmount', 0, 10);
+    bassDetec.add(bassParam, 'boostLength', 0, 2.0);
+    bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
+    bassDetec.add(bassParam, 'minVolume', 0, 0.9);
+    bassDetec.open();   
 }
 
 // ACTION!
