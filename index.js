@@ -116,7 +116,7 @@ function handleFiles(event) {
     souInput.src = URL.createObjectURL(files[0]);
     initalizeSound(souInput.src);
 }
-// input.addEventListener("change", handleFiles, false);
+input.addEventListener("change", handleFiles, false);
 
 // AUDIO
 let listener = new THREE.AudioListener();
@@ -145,10 +145,10 @@ function initalizeSound(file) {
         function (xhr) {
             sound.stop();
             playing = false;
-            // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         function (err) {
-            // console.log(err + "failed to load.");
+            console.log(err + "failed to load.");
         }
     );
     
