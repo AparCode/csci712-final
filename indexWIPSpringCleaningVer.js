@@ -286,7 +286,7 @@ class AudioAnalyserEX {
      * Multiple boosts can occur simutaneously, but the boost length does not stack.
      */
     freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
-        this.freqPreLen = Math.round(60 / (240 / (1000 / dt))); // This allows it to be less-effected by framerate!
+        this.freqPreLen = Math.round(60 / (240 / (1000 / dt))); // This allows it to be less influenced by framerate!
         var tEX = 0;
         freqNew /= 255; // Makes every frequency band out of 1.
         if (!analyser) return 0;
@@ -399,7 +399,7 @@ let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
-    kickDetec = gui.addFolder('Kick Detection');
+    kickDetec = gui.addFolder('Kick Detection ~ Object Burst');
     kickDetec.add(bassParam, 'startFreqency', 2, 18);
     kickDetec.add(bassParam, 'endFreqency', 8, 40);
     kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
@@ -408,7 +408,7 @@ function initializeObjectGUI() {
     kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
     kickDetec.add(kickParam, 'minVolume', 0, 0.9);
     kickDetec.open();
-    bassDetec = gui.addFolder('Bass Detection');
+    bassDetec = gui.addFolder('Bass Detection ~ Object Spin');
     bassDetec.add(bassParam, 'startFreqency', 8, 40);
     bassDetec.add(bassParam, 'endFreqency', 18, 80);
     bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
