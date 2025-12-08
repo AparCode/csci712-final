@@ -25,9 +25,11 @@
         <h2>Implementation</h2>
         <p>
             <!-- How you built it -->
-             <!-- This part especially could use some more meat on its bones! -->
+            <!-- This part especially could use some more meat on its bones! -->
 
             Applications of audio analysis is a rather heuristic process because of how varying the audio itself can be. Because of this, a lot of the uses of the implemented extended audio analysis use a lot of parameters, where a user interface in the animation itself was added to control these parameters in case the default settings did not suit the song. The lights and the movement along the Catmull-Rom curve use a basic solution that takes the average of selected frequency bands and applies an exponential scale, while the instantaneous actions of the object and particle systems use the more in-depth peak detection.
+
+            The Catmull-Rom curve movement expands upon a keyframe and interpolation system and closely following the original formula. The loop is attained by having the previous and next keyframed points loop rather than ending and starting with the last and first points. The object moves along the curve using an accumulating value that independent from the framerate of the animation, but how much it accumulates is determined by the extended audio analysis of the average volume across all frequency bands. 
         </p>
         <h2>Results</h2>
         <p>

@@ -3,10 +3,13 @@ import { Group } from '@tweenjs/tween.js';
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
 import { label } from "three/tsl";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
 import { GUI } from 'dat.gui'
+import Stats from 'three/examples/jsm/libs/stats.module'
+const stats = Stats()
+document.body.appendChild(stats.dom)
 
-let gui = new GUI();
 let scene = new THREE.Scene();
 let renderer = new THREE.WebGLRenderer({ antialias: false });
 let camera = new THREE.PerspectiveCamera(
@@ -18,6 +21,9 @@ let camera = new THREE.PerspectiveCamera(
 initalizeScene();
 initalizeRenderer();
 initalizeCamera();
+let gui = new GUI();
+
+const controls = new OrbitControls(camera, renderer.domElement);
 
 // HTML INTEGRATION
 const labelRenderer = new CSS2DRenderer();
@@ -26,10 +32,12 @@ initalizeUploadFileLabel();
 
 // Upload file input
 function initalizeUploadFileLabel() {
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(300, 200);
+    console.log(labelRenderer.getSize());
     labelRenderer.domElement.style.position = "absolute";
-    labelRenderer.domElement.style.top = "0px";
+    labelRenderer.domElement.style.top = "calc(100vh - 200px)";
     labelRenderer.domElement.style.color = "#ffffff";
+    // labelRenderer.domElement.style.zIndex = "-1";
     // labelRenderer.domElement.style.pointerEvents = "none";
     document.body.appendChild(labelRenderer.domElement);
 
@@ -37,8 +45,8 @@ function initalizeUploadFileLabel() {
     input.id = "upload";
     input.type = "file";
     input.accept = ".mp3,audio/*";
-    input.style.top = "calc(-50vh + 2em)";
-    input.style.left = "calc(-50vw + 10em)";
+    input.style.top = "calc(2em)";
+    input.style.left = "calc(0em)";
     cPointLabel = new CSS2DObject(input);
     cPointLabel.position.set(0, 0, 0);
     scene.add(cPointLabel);
@@ -76,9 +84,9 @@ function initalizePlayButton(){
     playButton.id = "play";
     playButton.innerHTML = "Play";
     playButton.style.position = "absolute";
-    playButton.style.top = "calc(-50vh + 4em)";
-    playButton.style.left = "calc(-50vw + 3em)";
-    playButton.style.zIndex = "1";
+    playButton.style.top = "calc(0em)";
+    playButton.style.left = "calc(0em)";
+    playButton.style.zIndex = "-1";
     playButton.onclick = playAudio;
     document.body.appendChild(playButton);
     playButtonLabel = new CSS2DObject(playButton);
@@ -93,9 +101,9 @@ function initalizePauseButton(){
     pauseButton.id = "pause";
     pauseButton.innerHTML = "Pause";
     pauseButton.style.position = "absolute";
-    pauseButton.style.top = "calc(-50vh + 6em)";
-    pauseButton.style.left = "calc(-50vw + 3em)";
-    pauseButton.style.zIndex = "1";
+    pauseButton.style.top = "calc(-2em)";
+    pauseButton.style.left = "calc(0em)";
+    pauseButton.style.zIndex = "-1";
     pauseButton.onclick = pauseAudio;
     document.body.appendChild(pauseButton);
     pauseButtonLabel = new CSS2DObject(pauseButton);
@@ -108,7 +116,7 @@ function handleFiles(event) {
     souInput.src = URL.createObjectURL(files[0]);
     initalizeSound(souInput.src);
 }
-input.addEventListener("change", handleFiles, false);
+// input.addEventListener("change", handleFiles, false);
 
 // AUDIO
 let listener = new THREE.AudioListener();
@@ -355,28 +363,36 @@ class aaEXparam {
 }
 
 let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
-let bassParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
+let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec;
+// initializeObjectGUI();
+// function initializeObjectGUI() {
+//     kickDetec = gui.addFolder('Kick Detection');
+//     kickDetec.add(bassParam, 'startFreqency', 2, 18);
+//     kickDetec.add(bassParam, 'endFreqency', 8, 40);
+//     kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
+//     kickDetec.add(kickParam, 'boostAmount', 0, 10);
+//     kickDetec.add(kickParam, 'boostLength', 0, 2.0);
+//     kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
+//     kickDetec.add(kickParam, 'minVolume', 0, 0.9);
+//     kickDetec.open();
+//     bassDetec = gui.addFolder('Bass Detection');
+//     bassDetec.add(bassParam, 'startFreqency', 8, 40);
+//     bassDetec.add(bassParam, 'endFreqency', 18, 80);
+//     bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
+//     bassDetec.add(bassParam, 'boostAmount', 0, 10);
+//     bassDetec.add(bassParam, 'boostLength', 0, 2.0);
+//     bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
+//     bassDetec.add(bassParam, 'minVolume', 0, 0.9);
+//     bassDetec.open();   
+// }
+
+let damnParam = new aaEXparam("damn", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
 initializeObjectGUI();
 function initializeObjectGUI() {
-    kickDetec = gui.addFolder('Kick Detection');
-    kickDetec.add(bassParam, 'startFreqency', 2, 18);
-    kickDetec.add(bassParam, 'endFreqency', 8, 40);
-    kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
-    kickDetec.add(kickParam, 'boostAmount', 0, 10);
-    kickDetec.add(kickParam, 'boostLength', 0, 2.0);
-    kickDetec.add(kickParam, 'boostCooldown', 0, 0.25);
-    kickDetec.add(kickParam, 'minVolume', 0, 0.9);
-    kickDetec.open();
-    bassDetec = gui.addFolder('Bass Detection');
-    bassDetec.add(bassParam, 'startFreqency', 8, 40);
-    bassDetec.add(bassParam, 'endFreqency', 18, 80);
-    bassDetec.add(bassParam, 'minVolumeDifference', 0, 0.1);
-    bassDetec.add(bassParam, 'boostAmount', 0, 10);
-    bassDetec.add(bassParam, 'boostLength', 0, 2.0);
-    bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
-    bassDetec.add(bassParam, 'minVolume', 0, 0.9);
-    bassDetec.open();   
+    var testGUI = gui.addFolder('testFOLDER');
+    testGUI.add(damnParam, 'startFreqency', 0, 1);
+    testGUI.open(); 
 }
 
 // ACTION!
@@ -428,6 +444,7 @@ function animate(time) {
 
     // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
     preTime = time;
+    stats.update()
 }
 
 // The path the shape moves along as kyframe data.

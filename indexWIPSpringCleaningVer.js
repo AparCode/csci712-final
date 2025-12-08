@@ -75,9 +75,8 @@ function initializeUploadButton() {
     input.id = "upload";
     input.type = "file";
     input.accept = ".mp3,audio/*";
-    input.addEventListener("change", handleFiles, false);
-    input.style.top = "calc(-50vh + 2em)";
-    input.style.left = "calc(-50vw + 10em)";
+    input.style.top = "calc(2em)";
+    input.style.left = "calc(0em)";
     cPointLabel = new CSS2DObject(input);
     cPointLabel.position.set(0, 0, 0);
     scene.add(cPointLabel);
@@ -103,9 +102,9 @@ function initializePlayButton(){
     playButton.id = "play";
     playButton.innerHTML = "Play";
     playButton.style.position = "absolute";
-    playButton.style.top = "calc(-50vh + 4em)";
-    playButton.style.left = "calc(-50vw + 3em)";
-    playButton.style.zIndex = "1";
+    playButton.style.top = "calc(0em)";
+    playButton.style.left = "calc(0em)";
+    playButton.style.zIndex = "-1";
     playButton.onclick = playAudio;
     document.body.appendChild(playButton);
     playButtonLabel = new CSS2DObject(playButton);
@@ -123,9 +122,9 @@ function initializePauseButton(){
     pauseButton.id = "pause";
     pauseButton.innerHTML = "Pause";
     pauseButton.style.position = "absolute";
-    pauseButton.style.top = "calc(-50vh + 6em)";
-    pauseButton.style.left = "calc(-50vw + 3em)";
-    pauseButton.style.zIndex = "1";
+    pauseButton.style.top = "calc(-2em)";
+    pauseButton.style.left = "calc(0em)";
+    pauseButton.style.zIndex = "-1";
     pauseButton.onclick = pauseAudio;
     document.body.appendChild(pauseButton);
     pauseButtonLabel = new CSS2DObject(pauseButton);
@@ -393,7 +392,7 @@ const keyframesObjAnimateMusicType2 = [
  * Initializes GUI for the Object audio analysis parameters.
  */
 let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
-let bassParam = new aaEXparam("kick", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
+let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
@@ -575,7 +574,7 @@ function animate(time) {
 }
 
 // Miscellaneous //////////
-// These don't quite fit into any catagory. Usually helper functions/
+// These don't quite fit into any catagory. Usually helper functions.
 ///////////////////////////
 ///////////////////////////
 ///////////////////////////
