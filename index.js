@@ -292,7 +292,9 @@ class AudioAnalyserEX {
 
     // Where the magical truly happens!
     freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
-        this.freqPreLen = Math.round(60 / (240 / (1000 / dt))); // This allows it to be less influenced by framerate!
+        // This allows it to be less influenced by framerate!
+        // The 240 is such that it tracks previous frequencies for 1 beat of a 240bpm song.
+        this.freqPreLen = Math.round(60 / (240 / (1000 / dt)));
         // console.log(this.freqPreLen);
         var tEX = 0;
         freqNew /= 255;
@@ -447,8 +449,8 @@ function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
     const delta_time = time - preTime;
 
-    object.rotation.x += rad(0.5) + rad(AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, bassParam.minVolumeDifference, bassParam.boostAmount, bassParam.boostLength, bassParam.boostCooldown, bassParam.minVolume));
-    const butHeresTheScaler = AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, dt, kickParam.minVolumeDifference, kickParam.boostAmount, kickParam.boostLength, kickParam.boostCooldown, kickParam.minVolume);
+    object.rotation.x += rad(0.5) + rad(AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, delta_time, bassParam.minVolumeDifference, bassParam.boostAmount, bassParam.boostLength, bassParam.boostCooldown, bassParam.minVolume));
+    const butHeresTheScaler = AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, delta_time, kickParam.minVolumeDifference, kickParam.boostAmount, kickParam.boostLength, kickParam.boostCooldown, kickParam.minVolume);
     object.scale.x = 1 + butHeresTheScaler;
     object.scale.y = 1 + butHeresTheScaler;
     object.scale.z = 1 + butHeresTheScaler;
