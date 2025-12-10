@@ -10,14 +10,6 @@ import Stats from 'three/examples/jsm/libs/stats.module'
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
-
-// Render and Preprocessing //////////
-// Initializes trivial things like the renderer and the like.
-//////////////////////////////////////
-//////////////////////////////////////
-//////////////////////////////////////
-
-let gui = new GUI();
 let scene = new THREE.Scene();
 let renderer = new THREE.WebGLRenderer({ antialias: false });
 let camera = new THREE.PerspectiveCamera(
@@ -26,40 +18,26 @@ let camera = new THREE.PerspectiveCamera(
     0.1, // Near
     1000 // Far
 );
-initializeScene();
-initializeRenderer();
-initializeCamera();
+initalizeScene();
+initalizeRenderer();
+initalizeCamera();
+let gui = new GUI();
 
 /**
- * Automatically resizes the window.
+ * Rotate around the view with the mouse. Reset by double clicking.
  */
-window.addEventListener('resize', function () {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+const controls = new OrbitControls(camera, renderer.domElement);
+window.addEventListener('dblclick', function () {
+    controls.reset();
 });
 
-/**
- * Sets up the renderer.
- */
-function initializeRenderer() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setAnimationLoop(animate);
-    document.body.appendChild(renderer.domElement);
-    renderer.setClearColor("#000000");
-}
-
-// Interaction //////////
-// HTML & CSS integration for uploading audio locally and audio playback controls.
-/////////////////////////
-/////////////////////////
-/////////////////////////
+// HTML INTEGRATION
 const labelRenderer = new CSS2DRenderer();
-initializeUserLabel();
-function initializeUserLabel(){
+let input, cPointLabel, audInput, aPointLabel, souInput;
+initalizeUploadFileLabel();
+
+// Upload file input
+function initalizeUploadFileLabel() {
     labelRenderer.setSize(300, 200);
     // console.log(labelRenderer.getSize());
     labelRenderer.domElement.style.position = "absolute";
@@ -68,14 +46,7 @@ function initializeUserLabel(){
     // labelRenderer.domElement.style.zIndex = "-1";
     // labelRenderer.domElement.style.pointerEvents = "none";
     document.body.appendChild(labelRenderer.domElement);
-}
 
-/**
- * Sets up the upload button.
- */
-let input, cPointLabel, audInput, aPointLabel, souInput;
-initializeUploadButton();
-function initializeUploadButton() {
     input = document.createElement("input");
     input.id = "upload";
     input.type = "file";
@@ -97,12 +68,24 @@ function initializeUploadButton() {
     scene.add(aPointLabel);
 }
 
-/**
- * Sets up the play button.
- */
+// Button functionality
+function playAudio() {
+    if (!playing) {
+        sound.play();
+        playing = true;
+    }
+}
+
+function pauseAudio() {
+    if (playing) {
+        sound.pause();
+        playing = false;
+    }
+}
+
 let playButtonLabel;
-initializePlayButton();
-function initializePlayButton(){
+initalizePlayButton();
+function initalizePlayButton(){
     let playButton = document.createElement("button");
     playButton.id = "play";
     playButton.innerHTML = "Play";
@@ -117,12 +100,9 @@ function initializePlayButton(){
     scene.add(playButtonLabel);
 }
 
-/**
- * Sets up the pause button.
- */
 let pauseButtonLabel;
-initializePauseButton();
-function initializePauseButton(){
+initalizePauseButton();
+function initalizePauseButton(){
     let pauseButton = document.createElement("button");
     pauseButton.id = "pause";
     pauseButton.innerHTML = "Pause";
@@ -140,23 +120,20 @@ function initializePauseButton(){
 function handleFiles(event) {
     var files = event.target.files;
     souInput.src = URL.createObjectURL(files[0]);
-    initializeSound(souInput.src);
+    initalizeSound(souInput.src);
 }
+input.addEventListener("change", handleFiles, false);
 
-// Audio //////////
-// Setting up the audio to play.
-///////////////////
-///////////////////
-///////////////////
+// AUDIO
 let listener = new THREE.AudioListener();
 let audioLoader = new THREE.AudioLoader();
 let sound = new THREE.Audio(listener);
 let analyser = new THREE.AudioAnalyser(sound, 2048);
-initializeSound("../sounds/LA8YRNTH.mp3");
+initalizeSound("../sounds/LA8YRNTH.mp3");
 camera.add(listener);
 let playing = false;
-function initializeSound(file) {
-    console.log(file);
+function initalizeSound(file) {
+    // console.log(file);
     audioLoader.parse
 
     audioLoader.load(file, function (buffer) {
@@ -183,194 +160,41 @@ function initializeSound(file) {
     
 }
 
-/**
- * Function for playing audio used by user-intractable buttons.
- */
-function playAudio() {
-    if (!playing) {
-        sound.play();
-        playing = true;
-    }
-}
-/**
- * Function for not playing audio used by user-intractable buttons.
- */
-function pauseAudio() {
-    if (playing) {
-        sound.pause();
-        playing = false;
-    }
-}
+// Automatically resizes the window.
+window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    // labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-// Scene and Background //////////
-// These functions pertain to static elements in the program.
-//////////////////////////////////
-//////////////////////////////////
-//////////////////////////////////
-
-/**
- * Initializes the scene.
- */
-function initializeScene() {
+// SCENE
+function initalizeScene() {
     scene.fog = new THREE.FogExp2(0x000000, 0.005);
 }
 
-/**
- * Initializes the camera.
- */
-function initializeCamera() {
+// RENDERER SETUP
+function initalizeRenderer() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setAnimationLoop(animate);
+    document.body.appendChild(renderer.domElement);
+    renderer.setClearColor("#000000");
+}
+
+// CAMERA
+function initalizeCamera() {
     camera.position.set(0, -50, 0);
     camera.rotation.x = rad(90);
     camera.rotation.y = rad(0);
     camera.rotation.z = rad(0);
 }
 
-/**
- * Rotate around the view with the mouse. Reset by double clicking.
- */
-const controls = new OrbitControls(camera, renderer.domElement);
-window.addEventListener('dblclick', function () {
-    controls.reset();
-});
-
-
-/**
- * Initializes the floor.
- */
-let plane;
-initializePlane();
-function initializePlane() {
-    plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(10000, 10000, 1, 1),
-        new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            flatShading: false
-        })
-    );
-    plane.receiveShadow = true;
-    scene.add(plane);
-    plane.position.z = -10;
-}
-
-// Audio Analyizer //////////
-// The star(s) of the show, these pertain to the extened functionality of audio analysis!
-/////////////////////////////
-/////////////////////////////
-/////////////////////////////
-class AudioAnalyserEX {
-    data;
-    avg;
-    freq;
-    id;
-    
-    boostActivate = false;
-    freqPre = []; // Previous frequency data list is used for more-accurate peak detection across several frames...
-    freqPreMax = 15; // ...but a cap of the length is set so as to not undermine repeated peaks.
-    // This length determines on an optional user-defined variable set in the GUI.
-
-    boostTime = 0;
-    boostActivateTime = 0;
-    boostCumulative = 0;
-    boostInetrpolate = 0;
-    boostCurrent = 0;
-    constructor(id) {
-        this.id = id;
-    }
-
-    /**
-     * Not tied to a specific instance of AudioAnalyserEX,
-     * this is a more-streamlined, natural approach to detecting peaks.
-     * This works very well for tracking general volume,
-     * but making certain frequencies act more dynamically requires some more finesse...!
-     */
-    static yolo(freqNew){
-        return ((freqNew / 255 * 2) ** 3) / 8; 
-    }
-
-    /**
-     * Where a good amount of the magic happens! 
-     * Allows objects to activate a parameterized "boost" if a certain frequency band(s) peaks in volume.
-     * 
-     * Each instance of an AudioAnalyserEX should specialize in a specific range of freuqency bands.
-     * It takes this and compares it to recently-stored freqncy bands of previous frames to see if
-     * 1. this frame's bands are louder than the average by some threshold
-     * 2. exceed a minimum volume
-     * 3. a given cooldown is not active.
-     * If so, it activates a "boost" of a given amount for a given amount of length and a sets a cooldown of a given length.
-     * Multiple boosts can occur simutaneously, but the boost length does not stack.
-     */
-    freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
-        this.freqPreLen = Math.round(60 / (scene.userData.userDefinedBPM / (1000 / dt))); // This allows it to be less influenced by framerate!
-        var tEX = 0;
-        freqNew /= 255; // Makes every frequency band out of 1.
-        if (!analyser) return 0;
-
-        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreMax)) + hreshThold)
-            && !this.boostActivate
-            && freqNew > volumeThresh
-        ) {
-            this.boostActivate = true;
-            this.boostCumulative += boostAmount;
-            this.boostCurrent = this.boostInetrpolate;
-            this.boostTime = 0;
-            this.boostActivateTime = 0;
-            console.log("BOOST!", this.id, freqNew);
-        }
-        if (this.boostActivate) {
-            this.boostActivateTime += dt / 1000;
-            if (this.boostActivateTime > boostActivateLength) {
-                this.boostActivate = false;
-            }
-        }
-        this.boostTime += (dt / 1000) / boostLength;
-        if (this.boostTime > 1) {
-            this.boostTime = 1;
-        }
-
-        this.boostInetrpolate = lerp(this.boostCurrent, this.boostCumulative, this.boostTime);
-
-        tEX = this.boostCumulative - this.boostInetrpolate;
-        this.freqPre.push(freqNew);
-        while (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
-
-        return tEX;
-    }
-}
-
-/**
- * A companion class for the extended audio analysis used to initialize GUI down the line.
- */
-class aaEXparam {
-    id;
-    startFreqency;
-    endFreqency;
-    minVolumeDifference;
-    boostAmount;
-    boostLength;
-    boostCooldown;
-    minVolume;
-    constructor(id, a, b, c, d, e, f, g) {
-        this.id = id;
-        this.startFreqency = f;
-        this.endFreqency = g;
-        this.minVolumeDifference = a;
-        this.boostAmount = b;
-        this.boostLength = c;
-        this.boostCooldown = d;
-        this.minVolume = e;
-    }
-}
-
-// Object //////////
-// These functions pertain to the floating object, including movement and applying audio analysis.
-////////////////////
-
-/**
- * Initializes the object that floats along the curve.
- */
+// OBJECT(s) of interest
 let object2;
-initializeObject2();
-function initializeObject2() {
+initalizeObject2();
+function initalizeObject2() {
 
     //Adding a particle system to the object
     const object2_particles = new THREE.BufferGeometry();
@@ -412,28 +236,140 @@ function initializeObject2() {
     object2_particleSystem.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
 }
 
-/**
- * The path the shape moves along as keyframe data is defined here.
- */
-var groupObjectAnimateMusicType2 = new Group();
-const keyframesObjAnimateMusicType2 = [
-    [-5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
-    [-5.0, 10.0, 0.0, 1.0, 1.0, -1.0, 30.0],
-    [5.0, 10.0, 0.0, 1.0, 1.0, -1.0, 30.0],
-    [5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
-    [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
-];
+// FLOOR
+let plane;
+initalizePlane();
+function initalizePlane() {
+    plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(10000, 10000, 1, 1),
+        new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            flatShading: false
+        })
+    );
+    plane.receiveShadow = true;
+    scene.add(plane);
+    plane.position.z = -10;
+}
 
-/**
- * Initializes GUI for the Object audio analysis parameters.
- */
-let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
-let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
+// LIGHT(S)
+let ambientLight1 = new THREE.AmbientLight(0xffffff, 0.25);
+let spotLight1 = new THREE.SpotLight(0xff8000, 5, 0, rad(-30), 1, 0);
+let spotLight2 = new THREE.SpotLight(0x0080ff, 1, 0, rad(10), 1, 0);
+initalizeLights();
+function initalizeLights() {
+    scene.add(ambientLight1);
+    spotLight1.position.set(0, -50, 0);
+    spotLight1.castShadow = true;
+    spotLight1.shadow.mapSize.set(1024, 1024);
+    spotLight1.shadow.camera.near = 0.1;
+    spotLight1.shadow.camera.far = 1000;
+    scene.add(spotLight1);
+
+    spotLight2.position.set(0, 0, 100);
+    spotLight2.castShadow = true;
+    spotLight2.shadow.mapSize.set(1024, 1024);
+    spotLight2.shadow.camera.near = 0.1;
+    spotLight2.shadow.camera.far = 1000;
+    scene.add(spotLight2);
+    spotLight2.target = object2;
+    scene.add(spotLight2.target);
+}
+
+
+// The meat of the extended audio analysis is within these functions!
+class AudioAnalyserEX {
+    data;
+    avg;
+    freq;
+    id;
+    
+    boostActivate = false;
+    freqPre = []; // Previous frequency data list is used for more-accurate peak detection across several frames...
+    freqPreMax = 15; // ...but a cap of the length is set so as to not undermine repeated peaks.
+    // This length determines on an optional user-defined variable set in the GUI.
+
+    boostTime = 0;
+    boostActivateTime = 0;
+    boostCumulative = 0;
+    boostInetrpolate = 0;
+    boostCurrent = 0;
+    constructor(id) {
+        this.id = id;
+    }
+
+    // Where the magical truly happens!
+    freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
+        this.freqPreLen = Math.round(60 / (scene.userData.userDefinedBPM / (1000 / dt))); // This allows it to be less influenced by framerate!
+        var tEX = 0;
+        freqNew /= 255;
+        if (!analyser) return 0;
+
+        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreLen)) + hreshThold)
+            && !this.boostActivate && freqNew > volumeThresh
+        ) {
+            this.boostActivate = true;
+            this.boostCumulative += boostAmount;
+            this.boostCurrent = this.boostInetrpolate;
+            this.boostTime = 0;
+            this.boostActivateTime = 0;
+            console.log("BOOST!", this.id, freqNew);
+        }
+        if (this.boostActivate) {
+            this.boostActivateTime += dt / 1000;
+            if (this.boostActivateTime > boostActivateLength) {
+                this.boostActivate = false;
+            }
+        }
+        this.boostTime += (dt / 1000) / boostLength;
+        if (this.boostTime > 1) {
+            this.boostTime = 1;
+        }
+
+        this.boostInetrpolate = lerp(this.boostCurrent, this.boostCumulative, this.boostTime);
+
+        tEX = this.boostCumulative - this.boostInetrpolate;
+        this.freqPre.push(freqNew);
+        while (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
+
+        return tEX;
+    }
+
+    // yolo
+    static yolo(freqNew){
+        return ((freqNew / 255 * 2) ** 3) / 8; 
+    }
+}
+
+class aaEXparam {
+    id;
+    startFreqency;
+    endFreqency;
+    minVolumeDifference;
+    boostAmount;
+    boostLength;
+    boostCooldown;
+    minVolume;
+    constructor(id, a, b, c, d, e, f, g) {
+        this.id = id;
+        this.startFreqency = f;
+        this.endFreqency = g;
+        this.minVolumeDifference = a;
+        this.boostAmount = b;
+        this.boostLength = c;
+        this.boostCooldown = d;
+        this.minVolume = e;
+    }
+}
+
+
 // Optional, user-defined BPM value.
 // Only used in determining the length of the previous frequency array.
 // Matching this value with the song BPM can make peaks easier to identify!
 scene.userData.userDefinedBPM = 200;
 
+let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
+let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 let kickDetec, bassDetec, optiDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
@@ -460,9 +396,69 @@ function initializeObjectGUI() {
     optiDetec.open();
 }
 
-/**
- * The animation function for the object.
- */
+// ACTION!
+var dt = 0;
+var preTime = 0;
+var data = analyser.getFrequencyData(); // Bands of frequencies.
+var avg = analyser.getAverageFrequency(); // General volume.
+const AudioAnalyserKick = new AudioAnalyserEX("Kick!");
+const AudioAnalyserBass = new AudioAnalyserEX("Bass!");
+let sub, kick, bass, midL, mid, midH, high, vhigh;
+function animate(time) {
+    // requestAnimationFrame(function loop(time) {
+    //     requestAnimationFrame(loop);
+    // }); // THIS IS BUILDS TOWARDS A MAJOR PERFORMANCE DECREASE, IT TURNS OUT!
+    labelRenderer.render(scene, camera);
+    renderer.render(scene, camera);
+
+    data = analyser.getFrequencyData();
+    avg = analyser.getAverageFrequency();
+    sub = truncateAvg(data, 2, 8);
+    kick = truncateAvg(data, 8, 18);
+    bass = truncateAvg(data, 18, 40);
+    midL = truncateAvg(data, 40, 80);
+    mid = truncateAvg(data, 80, 160);
+    midH = truncateAvg(data, 160, 320);
+    high = truncateAvg(data, 320, 600);
+    vhigh = truncateAvg(data, 600, 1000);
+
+    AudioAnalyserKick.freq = truncateAvg(data, kickParam.startFreqency, kickParam.endFreqency);
+    AudioAnalyserBass.freq = truncateAvg(data, bassParam.startFreqency, bassParam.endFreqency);
+
+    animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
+
+    // Default light intensities
+    ambientLight1.intensity = 0.25
+    spotLight2.intensity = 1
+    spotLight1.intensity = 5
+
+    if (playing){
+        ambientLight1.intensity = AudioAnalyserEX.yolo(midH * 1.25) * 0.5;
+        spotLight1.intensity = AudioAnalyserEX.yolo(mid) * 5 * 2;
+        spotLight2.intensity = AudioAnalyserEX.yolo(midL) * 2 * 2;
+    }
+    else{
+        ambientLight1.intensity = 0.25;
+        spotLight1.intensity = 5 * 2;
+        spotLight2.intensity = 1 * 2;
+    }
+
+    // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
+    preTime = time;
+    stats.update()
+}
+
+// The path the shape moves along as kyframe data.
+var groupObjectAnimateMusicType2 = new Group();
+const keyframesObjAnimateMusicType2 = [
+    [-5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
+    [-5.0, 10.0, 0.0, 1.0, 1.0, -1.0, 30.0],
+    [5.0, 10.0, 0.0, 1.0, 1.0, -1.0, 30.0],
+    [5.0, 0.0, 0.0, 1.0, 1.0, -1.0, 30.0],
+    [0.0, 0.0, -10.0, 1.0, 1.0, -1.0, 30.0]
+];
+
+// Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
     const delta_time = time - preTime;
@@ -477,15 +473,12 @@ function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     for (let i = 0; i < thisKeyframes.length; i++) {
         keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
     }
-    // console.log(object.t);
     object.t += (delta_time / 1000 * 0.1) + ((AudioAnalyserEX.yolo(avg * 2)) * (delta_time / 1000) * 0.4);
     object.t %= 1;
     object.position.copy(catmullRomLoop(keyframesParse, object.t, alph));
 }
 
-/**
- * Implementation of the Catmull Rom curve that the shape moves along the path of.
- */
+// Implementation of the Catmull Rom curve that the shape moves along the path of.
 function catmullRomLoop(keyframesParse, t, alph) {
 
     var prog = 1 + t * (keyframesParse.length);
@@ -532,101 +525,7 @@ function catmullRomLoop(keyframesParse, t, alph) {
     return new THREE.Vector3(px, py, pz);
 }
 
-// Lights //////////
-// This functions pertain to the lights.
-////////////////////
-////////////////////
-////////////////////
-let ambientLight1 = new THREE.AmbientLight(0xffffff, 0.25);
-let spotLight1 = new THREE.SpotLight(0xff8000, 5, 0, rad(-30), 1, 0);
-let spotLight2 = new THREE.SpotLight(0x0080ff, 1, 0, rad(10), 1, 0);
-initializeLights();
-function initializeLights() {
-    scene.add(ambientLight1);
-    spotLight1.position.set(0, -50, 0);
-    spotLight1.castShadow = true;
-    spotLight1.shadow.mapSize.set(1024, 1024);
-    spotLight1.shadow.camera.near = 0.1;
-    spotLight1.shadow.camera.far = 1000;
-    scene.add(spotLight1);
-
-    spotLight2.position.set(0, 0, 100);
-    spotLight2.castShadow = true;
-    spotLight2.shadow.mapSize.set(1024, 1024);
-    spotLight2.shadow.camera.near = 0.1;
-    spotLight2.shadow.camera.far = 1000;
-    scene.add(spotLight2);
-    spotLight2.target = object2;
-    scene.add(spotLight2.target);
-}
-
-// Animation Loop ///////////
-// It's time to play the music; It's time to light the lights...
-/////////////////////////////
-/////////////////////////////
-/////////////////////////////
-
-/**
- * The animation loop that updates each frame.
- * Includes a handy time variable that is frame-independent for smoother animation.
- */
-let dt = 0;
-let preTime = 0;
-let data = analyser.getFrequencyData(); // Bands of frequencies.
-let avg = analyser.getAverageFrequency(); // General volume.
-let AudioAnalyserKick = new AudioAnalyserEX("Kick!");
-let AudioAnalyserBass = new AudioAnalyserEX("Bass!");
-let sub, kick, bass, midL, mid, midH, high, vhigh;
-function animate(time) {
-    // requestAnimationFrame(function loop(time) {
-    //     requestAnimationFrame(loop);
-    // }); // THIS IS BUILDS TOWARDS A MAJOR PERFORMANCE DECREASE, IT TURNS OUT!
-    labelRenderer.render(scene, camera);
-    renderer.render(scene, camera);
-
-    data = analyser.getFrequencyData();
-    avg = analyser.getAverageFrequency();
-    sub = truncateAvg(data, 2, 8);
-    kick = truncateAvg(data, 8, 18);
-    bass = truncateAvg(data, 18, 40);
-    midL = truncateAvg(data, 40, 80);
-    mid = truncateAvg(data, 80, 160);
-    midH = truncateAvg(data, 160, 320);
-    high = truncateAvg(data, 320, 600);
-    vhigh = truncateAvg(data, 600, 1000);
-
-    AudioAnalyserKick.freq = kick;
-    AudioAnalyserBass.freq = bass;
-
-    animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
-    // spotLight2.intensity = 1
-    // spotLight1.intensity = 5
-
-    if (playing){
-        ambientLight1.intensity = AudioAnalyserEX.yolo(midH * 1.25) * 0.5;
-        spotLight1.intensity = AudioAnalyserEX.yolo(mid) * 5 * 2;
-        spotLight2.intensity = AudioAnalyserEX.yolo(midL) * 2 * 2;
-    }
-    else{
-        ambientLight1.intensity = 0.25;
-        spotLight1.intensity = 5 * 2;
-        spotLight2.intensity = 1 * 2;
-    }
-
-    // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
-    preTime = time;
-}
-
-// Miscellaneous //////////
-// These don't quite fit into any catagory. Usually helper functions.
-///////////////////////////
-///////////////////////////
-///////////////////////////
-
-/**
- * Helper "averaging of an array" function.
- * @returns The average value of an array from index i to index k (exclusive).
- */
+// Helper function. Gets the average value of an array from index i to index k (exclusive).
 function truncateAvg(dataer, i, k) {
     if ((k - i) == 0) return dataer[i];
     var j = 0;
@@ -639,16 +538,12 @@ function truncateAvg(dataer, i, k) {
     return j / l;
 }
 
-/**
- * Helper Linear intERPolation function.
- */
+// Helper Linear intERPolation function.
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
-/**
- * Helper degrees to radians function.
- */
+// Helper degrees to radians function.
 function rad(x) {
     return x / 180 * Math.PI;
 }
