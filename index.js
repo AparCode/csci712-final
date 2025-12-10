@@ -223,6 +223,7 @@ function initalizeObject2() {
     scene.add(object2);
     object2.position.set(0.0, 0.0, 10.0);
     object2.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
+    object2.t = 0;
 
     // Sync the particle system with the object.
     object2_particleSystem.position.copy(object2.position);
@@ -325,16 +326,6 @@ class AudioAnalyserEX {
         while (this.freqPre.length > this.freqPreLen) this.freqPre.shift();
 
         return tEX;
-    }
-
-    // Currently used for the shape. Could be it's own class?
-    t = 0;
-    getInterpolation(freqNew, time, preTime){
-        var yolo = AudioAnalyserEX.yolo(freqNew * 2);
-        dt  = time - preTime;
-        this.t += (dt / 1000 * 0.1) + (0) + (yolo * (dt / 1000) * 0.5);
-        this.t %= 1;
-        return this.t;
     }
 
     // yolo
@@ -465,7 +456,9 @@ function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     for (let i = 0; i < thisKeyframes.length; i++) {
         keyframesParse.push(new THREE.Vector3(thisKeyframes[i][0], thisKeyframes[i][2], thisKeyframes[i][1]));
     }
-    object.position.copy(catmullRomLoop(keyframesParse, AudioAnalyserKick.getInterpolation(avg, time, preTime), alph));
+    object.t += (delta_time / 1000 * 0.1) + ((AudioAnalyserEX.yolo(avg * 2)) * (delta_time / 1000) * 0.4);
+    object.t %= 1;
+    object.position.copy(catmullRomLoop(keyframesParse, object.t, alph));
 }
 
 // Implementation of the Catmull Rom curve that the shape moves along the path of.
