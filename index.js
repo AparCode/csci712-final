@@ -368,8 +368,8 @@ let kickDetec, bassDetec, optiDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
     kickDetec = gui.addFolder('Kick Detection ~ Object Burst');
-    kickDetec.add(bassParam, 'startFreqency', 2, 18);
-    kickDetec.add(bassParam, 'endFreqency', 8, 40);
+    kickDetec.add(kickParam, 'startFreqency', 2, 18);
+    kickDetec.add(kickParam, 'endFreqency', 8, 40);
     kickDetec.add(kickParam, 'minVolumeDifference', 0, 0.1);
     kickDetec.add(kickParam, 'boostAmount', 0, 10);
     kickDetec.add(kickParam, 'boostLength', 0, 2.0);
