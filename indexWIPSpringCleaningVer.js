@@ -252,8 +252,10 @@ class AudioAnalyserEX {
     id;
     
     boostActivate = false;
-    freqPre = []; // Previous frequency data is stored as a list for accuracy...
-    freqPreMax = 15; // ...but a cap on the length is set so as to not undermine repeated peaks.
+    freqPre = []; // Previous frequency data list is used for more-accurate peak detection across several frames...
+    freqPreMax = 15; // ...but a cap of the length is set so as to not undermine repeated peaks.
+    // This length determines on an optional user-defined variable set in the GUI.
+
     boostTime = 0;
     boostActivateTime = 0;
     boostCumulative = 0;
@@ -286,7 +288,7 @@ class AudioAnalyserEX {
      * Multiple boosts can occur simutaneously, but the boost length does not stack.
      */
     freqBoost(freqNew, dt, hreshThold, boostAmount, boostLength, boostActivateLength, volumeThresh) {
-        this.freqPreLen = Math.round(60 / (240 / (1000 / dt))); // This allows it to be less influenced by framerate!
+        this.freqPreLen = Math.round(60 / (scene.userData.userDefinedBPM / (1000 / dt))); // This allows it to be less influenced by framerate!
         var tEX = 0;
         freqNew /= 255; // Makes every frequency band out of 1.
         if (!analyser) return 0;
@@ -415,7 +417,12 @@ const keyframesObjAnimateMusicType2 = [
  */
 let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
 let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
-let kickDetec, bassDetec;
+// Optional, user-defined BPM value.
+// Only used in determining the length of the previous frequency array.
+// Matching this value with the song BPM can make peaks easier to identify!
+scene.userData.userDefinedBPM = 200;
+
+let kickDetec, bassDetec, optiDetec;
 initializeObjectGUI();
 function initializeObjectGUI() {
     kickDetec = gui.addFolder('Kick Detection ~ Object Burst');
@@ -436,6 +443,9 @@ function initializeObjectGUI() {
     bassDetec.add(bassParam, 'boostCooldown', 0, 0.25);
     bassDetec.add(bassParam, 'minVolume', 0, 0.9);
     bassDetec.open();   
+    optiDetec = gui.addFolder('Optional ~ For Easier Peak Detection');
+    optiDetec.add(scene.userData, 'userDefinedBPM', 60, 400);
+    optiDetec.open();
 }
 
 /**
