@@ -3,8 +3,12 @@ import { Group } from '@tweenjs/tween.js';
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { TeapotGeometry } from "three/examples/jsm/Addons.js";
 import { label } from "three/tsl";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
 import { GUI } from 'dat.gui'
+import Stats from 'three/examples/jsm/libs/stats.module'
+const stats = Stats()
+document.body.appendChild(stats.dom)
 
 
 // Render and Preprocessing //////////
@@ -35,7 +39,6 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
 
 /**
  * Sets up the renderer.
@@ -221,6 +224,15 @@ function initializeCamera() {
     camera.rotation.y = rad(0);
     camera.rotation.z = rad(0);
 }
+
+/**
+ * Rotate around the view with the mouse. Reset by double clicking.
+ */
+const controls = new OrbitControls(camera, renderer.domElement);
+window.addEventListener('dblclick', function () {
+    controls.reset();
+});
+
 
 /**
  * Initializes the floor.

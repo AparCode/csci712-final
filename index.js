@@ -23,7 +23,13 @@ initalizeRenderer();
 initalizeCamera();
 let gui = new GUI();
 
+/**
+ * Rotate around the view with the mouse. Reset by double clicking.
+ */
 const controls = new OrbitControls(camera, renderer.domElement);
+window.addEventListener('dblclick', function () {
+    controls.reset();
+});
 
 // HTML INTEGRATION
 const labelRenderer = new CSS2DRenderer();
