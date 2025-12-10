@@ -445,6 +445,7 @@ const keyframesObjAnimateMusicType2 = [
 // Used to animate the shape.
 function animateMusicType2(object, thisKeyframes, alph, time, preTime) {
     const avg = truncateAvg(data, 0, 1024);
+    const delta_time = time - preTime;
 
     object.rotation.x += rad(0.5) + rad(AudioAnalyserBass.freqBoost(AudioAnalyserBass.freq, dt, bassParam.minVolumeDifference, bassParam.boostAmount, bassParam.boostLength, bassParam.boostCooldown, bassParam.minVolume));
     const butHeresTheScaler = AudioAnalyserKick.freqBoost(AudioAnalyserKick.freq, dt, kickParam.minVolumeDifference, kickParam.boostAmount, kickParam.boostLength, kickParam.boostCooldown, kickParam.minVolume);
