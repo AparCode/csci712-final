@@ -144,6 +144,7 @@ function handleFiles(event) {
     souInput.src = URL.createObjectURL(files[0]);
     initializeSound(souInput.src);
 }
+input.addEventListener("change", handleFiles, false);
 
 // Audio //////////
 // Setting up the audio to play.
@@ -154,7 +155,7 @@ let listener = new THREE.AudioListener();
 let audioLoader = new THREE.AudioLoader();
 let sound = new THREE.Audio(listener);
 let analyser = new THREE.AudioAnalyser(sound, 2048);
-initializeSound("../sounds/LA8YRNTH.mp3");
+initializeSound("../sounds/bbkkbkk.mp3");
 camera.add(listener);
 let playing = false;
 function initializeSound(file) {
@@ -275,6 +276,7 @@ class AudioAnalyserEX {
     boostCumulative = 0;
     boostInetrpolate = 0;
     boostCurrent = 0;
+    boostIntensity = 0; // Used for the burst particles to determine how fast they go and how plentiful they are.
     constructor(id) {
         this.id = id;
     }
@@ -306,17 +308,19 @@ class AudioAnalyserEX {
         var tEX = 0;
         freqNew /= 255; // Makes every frequency band out of 1.
         if (!analyser) return 0;
+        const avg = truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreMax));
 
-        if ((freqNew > truncateAvg(this.freqPre, 0, Math.min(this.freqPre.length, this.freqPreMax)) + hreshThold)
+        if ((freqNew > (avg + hreshThold))
             && !this.boostActivate
-            && freqNew > volumeThresh
+            && (freqNew > volumeThresh)
         ) {
             this.boostActivate = true;
             this.boostCumulative += boostAmount;
             this.boostCurrent = this.boostInetrpolate;
             this.boostTime = 0;
             this.boostActivateTime = 0;
-            console.log("BOOST!", this.id, freqNew);
+            this.boostIntensity = (freqNew - avg) * freqNew;
+            console.log("BOOST!", this.id, freqNew, this.boostIntensity);
         }
         if (this.boostActivate) {
             this.boostActivateTime += dt / 1000;
@@ -446,7 +450,7 @@ function createObject2BurstParticles() {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     
     const material = new THREE.PointsMaterial({
-        size: 0.5,
+        size: 0.2,
         color: 0xffffff,
         transparent: true,
         opacity: 1.0,
@@ -460,7 +464,7 @@ function createObject2BurstParticles() {
 }
 
 /**
- * Triggers a burst of particles from object2's current position
+ * Triggers a burst of particles from object2's current position.
  */
 function triggerObject2Burst(burstSystem, intensity = 1.0) {
     const particlesPerBurst = Math.floor(20 * intensity); // More particles for stronger kicks
@@ -468,12 +472,18 @@ function triggerObject2Burst(burstSystem, intensity = 1.0) {
     for (let i = 0; i < particlesPerBurst; i++) {
         const idx = burstSystem.nextParticleIndex;
         const vel = burstSystem.velocities[idx];
+
+        const y = 1 - (Math.random() * 2);
+        const r = Math.sqrt(1 - (y * y)) * 5; // Radius of the burst's origin.
+        const longitude = (1 - (Math.random() * 2)) * 180;
+        const inside = Math.pow(Math.random(), (1 / 3));
+        const insideFinal = [r * Math.sin(rad(longitude)) * inside, y * inside, r * Math.cos(rad(longitude)) * inside];
         
         // Reset particle at object2's current position
         const positions = burstSystem.mesh.geometry.attributes.position.array;
-        positions[idx * 3] = object2.position.x;
-        positions[idx * 3 + 1] = object2.position.y;
-        positions[idx * 3 + 2] = object2.position.z;
+        positions[idx * 3] = object2.position.x + insideFinal[0];
+        positions[idx * 3 + 1] = object2.position.y + insideFinal[1];
+        positions[idx * 3 + 2] = object2.position.z + insideFinal[2];
         
         // Generate new random direction
         const theta = Math.random() * Math.PI * 2;
@@ -509,12 +519,12 @@ function updateObject2BurstParticles(burstSystem, deltaTime) {
             positions[i * 3 + 2] += vel.z * deltaTime * 0.1;
             
             // Apply gravity/drag
-            vel.y -= 0.01 * deltaTime * 0.1; // Slight downward pull
-            vel.x *= 0.95;
-            vel.z *= 0.95;
+            vel.z -= (0.1 * (deltaTime / 1000));
+            vel.x *= (1.0 - (1.0 * (deltaTime / 10000)));
+            vel.y *= (1.0 - (1.0 * (deltaTime / 10000)));
             
             // Decrease lifetime
-            vel.life -= deltaTime * 0.001;
+            vel.life -= (deltaTime / 3000);
             
             if (vel.life <= 0) {
                 vel.active = false;
@@ -554,7 +564,7 @@ const keyframesObjAnimateMusicType2 = [
 /**
  * Initializes GUI for the Object audio analysis parameters.
  */
-let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.5, 8, 18);
+let kickParam = new aaEXparam("kick", 0.05, 0.25, 0.2, 0.1, 0.6, 8, 18);
 let bassParam = new aaEXparam("bass", 0.03, 5, 0.25, 0.1, 0.5, 18, 40);
 // Optional, user-defined BPM value.
 // Only used in determining the length of the previous frequency array.
@@ -735,8 +745,9 @@ function animate(time) {
         updateObject2BurstParticles(object2BurstSystem, dt);
 
         if (AudioAnalyserKick.boostActivate) {
-            const intensity = AudioAnalyserKick.boostCurrent / kickParam.boostAmount;
-            triggerObject2Burst(object2BurstSystem, intensity);
+            const particleIntensity = AudioAnalyserKick.boostIntensity * 50;
+            // console.log(intensity);
+            triggerObject2Burst(object2BurstSystem, particleIntensity);
         }
     }
 
