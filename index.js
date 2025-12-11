@@ -7,6 +7,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 THREE.Cache.enabled = true; // Ensures that the song uploading feature works.
 import { GUI } from 'dat.gui'
 import Stats from 'three/examples/jsm/libs/stats.module'
+
+// Stats
 const stats = Stats()
 document.body.appendChild(stats.dom)
 
@@ -385,7 +387,7 @@ function initializeObject2() {
         color: 0xffffff
     });
     const object2_particleSystem = new THREE.Points(object2_particles, object2_particles_material);
-    scene.add(object2_particleSystem);
+    // scene.add(object2_particleSystem);
 
     object2 = new THREE.Mesh(
         // new THREE.TorusGeometry(5, 2, 12, 48, rad(360)),
@@ -411,6 +413,131 @@ function initializeObject2() {
     object2_particleSystem.position.copy(object2.position);
     object2_particleSystem.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1.0, 0.0, 0.0).normalize(), rad(90)));
 }
+
+/**
+ * Creates a burst particle system for object2 that emits on audio kicks
+ */
+function createObject2BurstParticles() {
+    const burstCount = 200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(burstCount * 3);
+    const velocities = [];
+    
+    // Initialize all particles at object2's position
+    for (let i = 0; i < burstCount; i++) {
+        positions[i * 3] = object2.position.x;
+        positions[i * 3 + 1] = object2.position.y;
+        positions[i * 3 + 2] = object2.position.z;
+        
+        // Random outward velocities
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const speed = 0.1 + Math.random() * 0.2; // Variable speed
+        
+        velocities.push({
+            x: Math.sin(phi) * Math.cos(theta) * speed,
+            y: Math.sin(phi) * Math.sin(theta) * speed,
+            z: Math.cos(phi) * speed,
+            life: 0, // Start dead
+            active: false
+        });
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
+    const material = new THREE.PointsMaterial({
+        size: 0.5,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 1.0,
+        blending: THREE.AdditiveBlending
+    });
+    
+    const burstSystem = new THREE.Points(geometry, material);
+    scene.add(burstSystem);
+    
+    return { mesh: burstSystem, velocities: velocities, nextParticleIndex: 0 };
+}
+
+/**
+ * Triggers a burst of particles from object2's current position
+ */
+function triggerObject2Burst(burstSystem, intensity = 1.0) {
+    const particlesPerBurst = Math.floor(20 * intensity); // More particles for stronger kicks
+    
+    for (let i = 0; i < particlesPerBurst; i++) {
+        const idx = burstSystem.nextParticleIndex;
+        const vel = burstSystem.velocities[idx];
+        
+        // Reset particle at object2's current position
+        const positions = burstSystem.mesh.geometry.attributes.position.array;
+        positions[idx * 3] = object2.position.x;
+        positions[idx * 3 + 1] = object2.position.y;
+        positions[idx * 3 + 2] = object2.position.z;
+        
+        // Generate new random direction
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const speed = (0.1 + Math.random() * 0.1) * intensity;
+        
+        vel.x = Math.sin(phi) * Math.cos(theta) * speed;
+        vel.y = Math.sin(phi) * Math.sin(theta) * speed;
+        vel.z = Math.cos(phi) * speed;
+        vel.life = 1.0;
+        vel.active = true;
+        
+        burstSystem.nextParticleIndex = (burstSystem.nextParticleIndex + 1) % burstSystem.velocities.length;
+    }
+    
+    burstSystem.mesh.geometry.attributes.position.needsUpdate = true;
+}
+
+/**
+ * Updates the burst particle system each frame
+ */
+function updateObject2BurstParticles(burstSystem, deltaTime) {
+    const positions = burstSystem.mesh.geometry.attributes.position.array;
+    let activeCount = 0;
+    
+    for (let i = 0; i < burstSystem.velocities.length; i++) {
+        const vel = burstSystem.velocities[i];
+        
+        if (vel.active && vel.life > 0) {
+            // Update position
+            positions[i * 3] += vel.x * deltaTime * 0.1;
+            positions[i * 3 + 1] += vel.y * deltaTime * 0.1;
+            positions[i * 3 + 2] += vel.z * deltaTime * 0.1;
+            
+            // Apply gravity/drag
+            vel.y -= 0.01 * deltaTime * 0.1; // Slight downward pull
+            vel.x *= 0.95;
+            vel.z *= 0.95;
+            
+            // Decrease lifetime
+            vel.life -= deltaTime * 0.001;
+            
+            if (vel.life <= 0) {
+                vel.active = false;
+            } else {
+                activeCount++;
+            }
+        }
+    }
+    
+    burstSystem.mesh.geometry.attributes.position.needsUpdate = true;
+    
+    // Adjust overall opacity based on active particles
+    if (activeCount > 0) {
+        burstSystem.mesh.material.opacity = Math.min(1.0, activeCount / 50);
+    } else {
+        burstSystem.mesh.material.opacity = 0;
+    }
+}
+
+let object2BurstSystem;
+object2BurstSystem = createObject2BurstParticles();
+
+// initalizing particle t
 
 /**
  * The path the shape moves along as keyframe data is defined here.
@@ -560,7 +687,7 @@ function initializeLights() {
     scene.add(spotLight2.target);
 }
 
-// Animation Loop ///////////
+// Animation Loop //////////
 // It's time to play the music; It's time to light the lights...
 /////////////////////////////
 /////////////////////////////
@@ -577,10 +704,12 @@ let avg = analyser.getAverageFrequency(); // General volume.
 let AudioAnalyserKick = new AudioAnalyserEX("Kick!");
 let AudioAnalyserBass = new AudioAnalyserEX("Bass!");
 let sub, kick, bass, midL, mid, midH, high, vhigh;
+
 function animate(time) {
     // requestAnimationFrame(function loop(time) {
     //     requestAnimationFrame(loop);
     // }); // THIS IS BUILDS TOWARDS A MAJOR PERFORMANCE DECREASE, IT TURNS OUT!
+    dt = time - preTime;
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 
@@ -601,6 +730,15 @@ function animate(time) {
     animateMusicType2(object2, keyframesObjAnimateMusicType2, 0, time, preTime);
     // spotLight2.intensity = 1
     // spotLight1.intensity = 5
+
+    if (object2BurstSystem) {
+        updateObject2BurstParticles(object2BurstSystem, dt);
+
+        if (AudioAnalyserKick.boostActivate) {
+            const intensity = AudioAnalyserKick.boostCurrent / kickParam.boostAmount;
+            triggerObject2Burst(object2BurstSystem, intensity);
+        }
+    }
 
     if (playing){
         ambientLight1.intensity = AudioAnalyserEX.yolo(midH * 1.25) * 0.5;
