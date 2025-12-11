@@ -762,8 +762,8 @@ function animate(time) {
         spotLight2.intensity = 1 * 2;
     }
 
-    // // NOTE TO SELF, performance.now() is pretty much the same as time here, but global!
     preTime = time;
+    stats.update();
 }
 
 // Miscellaneous //////////
