@@ -37,7 +37,7 @@ initializeCamera();
  */
 window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(300, 200);
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
